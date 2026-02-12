@@ -392,6 +392,7 @@ td.td-desc{max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:no
       <div class="stat"><span class="stat-num" id="stat-total">0</span><span class="stat-label">Total Items</span></div>
       <div class="stat"><span class="stat-num" id="stat-showing">0</span><span class="stat-label">Showing</span></div>
       <div class="stat"><span class="stat-num" id="stat-cats">0</span><span class="stat-label">Categories</span></div>
+      <div class="stat" id="stat-icons-wrap" style="display:none"><span class="stat-num" id="stat-icons">0</span><span class="stat-label">With Icons</span></div>
     </div>
   </div>
 
@@ -447,7 +448,7 @@ const CONFIG = {
   // ── Icons ──────────────────────────────────────────────────────
   // Set to true once you have converted the .dds spritesheets to PNG.
   // Everything else is already wired up — just flip this flag.
-  ICONS_ENABLED: true,
+  ICONS_ENABLED: false,
 
   // Extension of your converted spritesheet files (.png or .jpg)
   ICON_EXT: '.png',
@@ -619,10 +620,11 @@ async function loadAllData() {
       const cols = Math.max(1, Math.floor((ic.ii_filesize || 512) / w));
       const off  = ic.ii_offset   || 0;
       iconData[String(ic.ii_id)] = {
-        sheet: CONFIG.ICONS_DIR + sheetFile,
-        x:     (off % cols) * w,
-        y:     Math.floor(off / cols) * h,
-        w, h
+        sheet:  CONFIG.ICONS_DIR + sheetFile,
+        x:      (off % cols) * w,
+        y:      Math.floor(off / cols) * h,
+        w, h,
+        sheetW: ic.ii_filesize || 512   // needed for background-size scaling
       };
     }
 
@@ -632,12 +634,13 @@ async function loadAllData() {
       const category = determineCategory(s(item.ii_meshfilename));
       const upgrade  = determineUpgrade(item.ii_id, category);
 
-      // Icon lookup key: prefer ii_iconsmall, fall back to ii_id
-      const iconKey  = item.ii_iconsmall != null ? String(item.ii_iconsmall)
-                     : item.ii_id        != null ? String(item.ii_id)
-                     : null;
-      const sprite   = (CONFIG.ICONS_ENABLED && iconKey && iconData[iconKey])
-                     ? iconData[iconKey] : null;
+      // Try ii_iconsmall first, then ii_icon, then ii_id itself
+      // Different items use different fields to reference iconsinfo entries
+      const iconKey = [item.ii_iconsmall, item.ii_icon, item.ii_id]
+        .filter(v => v != null)
+        .map(String)
+        .find(k => iconData[k]) || null;
+      const sprite = (CONFIG.ICONS_ENABLED && iconKey) ? iconData[iconKey] : null;
 
       return {
         id: item.ii_id != null ? item.ii_id : '',
@@ -655,6 +658,12 @@ async function loadAllData() {
 
     document.getElementById('stat-total').textContent = allItems.length.toLocaleString();
     document.getElementById('stat-cats').textContent  = new Set(allItems.map(i => i.category)).size;
+
+    if (CONFIG.ICONS_ENABLED) {
+      const withIcons = allItems.filter(i => i.sprite).length;
+      document.getElementById('stat-icons').textContent   = withIcons.toLocaleString();
+      document.getElementById('stat-icons-wrap').style.display = '';
+    }
 
     buildCategoryStrip();
     resetFilters();
@@ -824,22 +833,20 @@ function iconHtml(item, size) {
   if (CONFIG.ICONS_ENABLED && item.sprite) {
     const sp  = item.sprite;
     const dim = size === 'card' ? 56 : 30;
-    // Scale factor so the icon fits inside dim×dim
-    const scale  = dim / Math.max(sp.w, sp.h);
-    const sw     = Math.round(sp.w * scale);
-    const sh     = Math.round(sp.h * scale);
-    const bx     = -Math.round(sp.x * scale);
-    const by     = -Math.round(sp.y * scale);
-    // We need the full spritesheet scaled dimensions too
-    // Use a large background-size so the sheet scales proportionally
-    const bsW = 'auto'; // let the browser infer from the image
+    // Scale the icon to fit inside dim×dim, keeping aspect ratio
+    const scale = dim / Math.max(sp.w, sp.h);
+    const sw    = Math.round(sp.w    * scale);   // display width of icon
+    const sh    = Math.round(sp.h    * scale);   // display height of icon
+    const bx    = -Math.round(sp.x   * scale);   // background-position X
+    const by    = -Math.round(sp.y   * scale);   // background-position Y
+    const bsW   = Math.round(sp.sheetW * scale); // background-size width (scales the whole sheet)
     const style = [
-      `width:${sw}px`,`height:${sh}px`,
+      `width:${sw}px`, `height:${sh}px`,
       `background-image:url('${sp.sheet}')`,
       `background-position:${bx}px ${by}px`,
-      `background-size:auto`,
+      `background-size:${bsW}px auto`,           // height auto keeps aspect ratio
       `image-rendering:pixelated`,
-      `display:inline-block`,`flex-shrink:0`
+      `display:inline-block`, `flex-shrink:0`
     ].join(';');
     const wrapCls = size === 'card' ? 'card-icon' : '';
     return `<span class="${wrapCls}" style="${style}" title="${esc(item.name)}"></span>`;
