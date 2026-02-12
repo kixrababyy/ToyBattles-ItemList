@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎮 Item Database</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════════════════════
+   THEME VARIABLES
+════════════════════════════════════════════════════════════════ */
+:root {
+  --bg:       #0b0c10; --bg2:      #13141a; --bg3:      #1a1c25;
+  --surface:  #1e2030; --surface2: #252840;
+  --border:   #2e3148; --border2:  #3d4166;
+  --text:     #e8eaf6; --text2:    #9ea3c0; --text3:    #5a6080;
+  --accent:   #5c6bc0; --accent2:  #7986cb;
+  --radius:   8px;
+}
+[data-theme="light"] {
+  --bg:#f0f2f8; --bg2:#e4e7f2; --bg3:#dce0ef;
+  --surface:#ffffff; --surface2:#eef0fa;
+  --border:#cbd0e8; --border2:#b0b8d8;
+  --text:#1a1c2e; --text2:#4a5080; --text3:#8890b0;
+  --accent:#4455bb; --accent2:#5566cc;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   RESET & BASE
+════════════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Barlow',sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;overflow-x:hidden;
+  transition:background .3s,color .3s;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   LOADING SCREEN
+════════════════════════════════════════════════════════════════ */
+#loading-screen{
+  position:fixed;inset:0;z-index:300;
+  background:var(--bg);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:28px;
+  transition:opacity .4s;
+}
+#loading-screen.fade-out{opacity:0;pointer-events:none}
+.load-logo{
+  font-family:'Rajdhani',sans-serif;
+  font-size:48px;font-weight:700;letter-spacing:3px;
+  color:var(--text);
+}
+.load-logo span{color:var(--accent2)}
+.load-steps{display:flex;flex-direction:column;gap:10px;width:340px}
+.load-step{
+  display:flex;align-items:center;gap:12px;
+  font-size:13px;color:var(--text3);
+  transition:color .3s;
+}
+.load-step.active{color:var(--text2)}
+.load-step.done{color:#6fcf82}
+.step-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--border2);flex-shrink:0;
+  transition:background .3s;
+}
+.load-step.active .step-dot{background:var(--accent2);animation:pulse 1s infinite}
+.load-step.done   .step-dot{background:#6fcf82}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.load-bar-wrap{
+  width:340px;height:4px;background:var(--border);
+  border-radius:2px;overflow:hidden;
+}
+.load-bar{
+  height:100%;width:0;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transition:width .4s ease;border-radius:2px;
+}
+.load-error{
+  color:#cf6f6f;font-size:13px;text-align:center;
+  max-width:340px;display:none;
+}
+.retry-btn{
+  margin-top:10px;padding:8px 20px;
+  background:var(--surface);border:1px solid var(--border2);
+  color:var(--text);border-radius:var(--radius);
+  cursor:pointer;font-size:13px;font-family:'Barlow',sans-serif;
+  transition:border-color .2s;display:none;
+}
+.retry-btn:hover{border-color:var(--accent2)}
+
+/* ════════════════════════════════════════════════════════════════
+   HEADER
+════════════════════════════════════════════════════════════════ */
+header{
+  position:sticky;top:0;z-index:100;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  backdrop-filter:blur(12px);padding:0 24px;
+}
+.header-inner{
+  max-width:1600px;margin:0 auto;
+  display:flex;align-items:center;gap:14px;height:56px;
+}
+.logo{
+  font-family:'Rajdhani',sans-serif;
+  font-size:21px;font-weight:700;letter-spacing:1px;white-space:nowrap;
+}
+.logo span{color:var(--accent2)}
+.header-space{flex:1}
+.icon-btn{
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text2);border-radius:var(--radius);
+  padding:6px 12px;cursor:pointer;font-size:12px;
+  font-family:'Barlow',sans-serif;transition:all .2s;white-space:nowrap;
+}
+.icon-btn:hover{border-color:var(--accent2);color:var(--text)}
+.theme-btn{
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text2);border-radius:50%;
+  width:34px;height:34px;cursor:pointer;font-size:15px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;flex-shrink:0;
+}
+.theme-btn:hover{border-color:var(--accent2);color:var(--text)}
+
+/* ════════════════════════════════════════════════════════════════
+   STATS BAR
+════════════════════════════════════════════════════════════════ */
+.stats-bar{
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:8px 24px;
+}
+.stats-inner{
+  max-width:1600px;margin:0 auto;
+  display:flex;gap:24px;align-items:center;flex-wrap:wrap;
+}
+.stat{display:flex;align-items:baseline;gap:6px}
+.stat-num{
+  font-family:'Share Tech Mono',monospace;
+  font-size:19px;font-weight:700;color:var(--accent2);
+}
+.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px}
+
+/* ════════════════════════════════════════════════════════════════
+   CONTROLS
+════════════════════════════════════════════════════════════════ */
+.controls{
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:10px 24px;position:sticky;top:56px;z-index:90;
+}
+.controls-inner{
+  max-width:1600px;margin:0 auto;
+  display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+}
+.search-wrap{position:relative;flex:1;min-width:180px}
+.search-wrap svg{
+  position:absolute;left:9px;top:50%;transform:translateY(-50%);
+  color:var(--text3);pointer-events:none;
+}
+#search{
+  width:100%;padding:7px 10px 7px 30px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);color:var(--text);
+  font-family:'Barlow',sans-serif;font-size:13px;outline:none;
+  transition:border-color .2s;
+}
+#search:focus{border-color:var(--accent2)}
+#search::placeholder{color:var(--text3)}
+select{
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text);border-radius:var(--radius);
+  font-family:'Barlow',sans-serif;font-size:13px;
+  padding:7px 10px;cursor:pointer;outline:none;transition:border-color .2s;
+}
+select:hover,select:focus{border-color:var(--accent2)}
+option{background:var(--surface)}
+.view-toggle{display:flex;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.view-btn{
+  background:var(--surface);border:none;border-right:1px solid var(--border);
+  color:var(--text2);padding:7px 12px;cursor:pointer;font-size:13px;
+  transition:all .15s;
+}
+.view-btn:last-child{border-right:none}
+.view-btn.active{background:var(--accent);color:#fff}
+.view-btn:hover:not(.active){background:var(--surface2)}
+.reset-btn{
+  background:transparent;border:1px solid var(--border);
+  color:var(--text2);border-radius:var(--radius);
+  padding:7px 12px;cursor:pointer;font-size:13px;
+  font-family:'Barlow',sans-serif;transition:all .2s;white-space:nowrap;
+}
+.reset-btn:hover{border-color:var(--accent2);color:var(--text)}
+
+/* ════════════════════════════════════════════════════════════════
+   CATEGORY STRIP
+════════════════════════════════════════════════════════════════ */
+.cat-strip-wrap{
+  background:var(--bg3);border-bottom:1px solid var(--border);
+  padding:0 24px;overflow-x:auto;scrollbar-width:none;
+}
+.cat-strip-wrap::-webkit-scrollbar{display:none}
+.cat-strip{
+  max-width:1600px;margin:0 auto;
+  display:flex;gap:2px;padding:7px 0;
+}
+.cat-btn{
+  white-space:nowrap;padding:4px 13px;
+  border-radius:20px;border:1px solid transparent;
+  background:transparent;color:var(--text2);
+  font-family:'Barlow',sans-serif;font-size:12px;font-weight:500;
+  cursor:pointer;transition:all .15s;
+  display:flex;align-items:center;gap:5px;
+}
+.cat-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.cat-btn:hover{color:var(--text);background:var(--surface)}
+.cat-btn.active{
+  border-color:var(--cat-color,var(--accent2));
+  color:var(--text);background:var(--surface);
+  box-shadow:0 0 0 1px var(--cat-color,var(--accent2));
+}
+
+/* ════════════════════════════════════════════════════════════════
+   CONTENT
+════════════════════════════════════════════════════════════════ */
+.content{max-width:1600px;margin:0 auto;padding:18px 24px}
+
+/* ── Grid ── */
+.grid-view{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:12px;
+}
+.item-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;
+  transition:transform .15s,box-shadow .15s,border-color .15s;
+  animation:fadeUp .2s ease both;cursor:default;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.item-card:hover{
+  transform:translateY(-2px);
+  border-color:var(--cat-color,var(--border2));
+  box-shadow:0 6px 20px rgba(0,0,0,.4),0 0 0 1px var(--cat-color,var(--accent));
+}
+.card-top-bar{height:3px;background:var(--cat-color,var(--accent))}
+.card-icon-wrap{
+  display:flex;align-items:center;justify-content:center;
+  height:72px;background:var(--bg3);border-bottom:1px solid var(--border);
+  overflow:hidden;
+}
+.card-icon{
+  max-width:64px;max-height:64px;
+  object-fit:contain;image-rendering:pixelated;
+}
+.card-icon-placeholder{
+  width:44px;height:44px;border-radius:8px;
+  background:var(--surface2);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;color:var(--text3);
+}
+.card-body{padding:11px 12px}
+.card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:6px}
+.card-name{
+  font-family:'Rajdhani',sans-serif;
+  font-size:14px;font-weight:600;color:var(--text);line-height:1.3;
+}
+.card-id{
+  font-family:'Share Tech Mono',monospace;
+  font-size:10px;color:var(--text3);
+  background:var(--bg3);border:1px solid var(--border);
+  padding:2px 6px;border-radius:4px;white-space:nowrap;
+  cursor:pointer;transition:all .15s;flex-shrink:0;
+}
+.card-id:hover{border-color:var(--accent2);color:var(--accent2)}
+.card-desc{
+  font-size:11px;color:var(--text2);line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;margin-bottom:8px;
+}
+.card-badges{display:flex;flex-wrap:wrap;gap:4px}
+.badge{
+  font-size:9px;font-weight:600;padding:2px 7px;
+  border-radius:10px;text-transform:uppercase;letter-spacing:.4px;
+}
+.badge-cat{color:#fff;background:var(--cat-color,var(--accent));filter:brightness(.85)}
+.badge-up-yes {background:#1a3a20;color:#6fcf82;border:1px solid #2d5a35}
+.badge-up-no  {background:#2a1a1a;color:#cf6f6f;border:1px solid #5a2d2d}
+.badge-up-able{background:#1a2a3a;color:#6faaef;border:1px solid #2d4a6a}
+.badge-dur    {background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
+
+/* ── Table ── */
+.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:var(--surface2)}
+th{
+  padding:10px 13px;text-align:left;
+  font-family:'Rajdhani',sans-serif;font-size:11px;
+  font-weight:600;letter-spacing:1px;text-transform:uppercase;
+  color:var(--text2);border-bottom:1px solid var(--border);
+  white-space:nowrap;user-select:none;cursor:pointer;
+}
+th:hover{color:var(--text)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;animation:fadeUp .2s ease both}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+td{padding:8px 13px;color:var(--text);vertical-align:middle}
+td.td-icon{width:44px;padding:4px 8px;text-align:center}
+td.td-icon img{width:32px;height:32px;object-fit:contain;image-rendering:pixelated;display:block;margin:0 auto}
+td.td-icon .no-icon{width:28px;height:28px;border-radius:5px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text3);margin:0 auto}
+td.td-id{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);cursor:pointer;white-space:nowrap}
+td.td-id:hover{color:var(--accent2)}
+td.td-name{font-weight:500}
+td.td-file{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.td-desc{max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2);font-size:12px}
+.row-bar{display:inline-block;width:3px;height:13px;border-radius:2px;margin-right:7px;vertical-align:middle;background:var(--cat-color,var(--accent))}
+
+/* ── Empty ── */
+.empty{text-align:center;padding:70px 20px;color:var(--text3)}
+.empty svg{margin-bottom:14px;opacity:.35}
+.empty p{font-size:14px}
+
+/* ── Toast ── */
+.toast{
+  position:fixed;bottom:22px;left:50%;
+  transform:translateX(-50%) translateY(10px);
+  background:var(--surface2);border:1px solid var(--border2);
+  color:var(--text);padding:9px 18px;border-radius:22px;
+  font-size:12px;z-index:999;opacity:0;
+  transition:all .25s;pointer-events:none;
+  box-shadow:0 4px 16px rgba(0,0,0,.4);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--accent)}
+
+/* ── Responsive ── */
+@media(max-width:640px){
+  .content{padding:10px}
+  .grid-view{grid-template-columns:repeat(2,1fr);gap:8px}
+  .controls-inner{gap:6px}
+}
+@media(max-width:380px){.grid-view{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     LOADING SCREEN
+════════════════════════════════════════════════════════════════ -->
+<div id="loading-screen">
+  <div class="load-logo">🎮 Item <span>Database</span></div>
+  <div class="load-steps">
+    <div class="load-step" id="step-items">
+      <div class="step-dot"></div> Loading iteminfo.cdb.json
+    </div>
+    <div class="load-step" id="step-weapons">
+      <div class="step-dot"></div> Loading itemweaponsinfo.cdb.json
+    </div>
+    <div class="load-step" id="step-build">
+      <div class="step-dot"></div> Building catalog
+    </div>
+  </div>
+  <div class="load-bar-wrap"><div class="load-bar" id="load-bar"></div></div>
+  <div class="load-error" id="load-error"></div>
+  <button class="retry-btn" id="retry-btn" onclick="loadAllData()">↺ Retry</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     APP
+════════════════════════════════════════════════════════════════ -->
+<div id="app" style="display:none">
+
+  <header>
+    <div class="header-inner">
+      <div class="logo">🎮 Item <span>Database</span></div>
+      <div class="header-space"></div>
+      <button class="icon-btn" onclick="loadAllData()">↺ Reload Data</button>
+      <button class="theme-btn" id="theme-btn" title="Toggle theme">☀️</button>
+    </div>
+  </header>
+
+  <div class="stats-bar">
+    <div class="stats-inner">
+      <div class="stat"><span class="stat-num" id="stat-total">0</span><span class="stat-label">Total Items</span></div>
+      <div class="stat"><span class="stat-num" id="stat-showing">0</span><span class="stat-label">Showing</span></div>
+      <div class="stat"><span class="stat-num" id="stat-cats">0</span><span class="stat-label">Categories</span></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="controls-inner">
+      <div class="search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="search" placeholder="Search name, ID, description…">
+      </div>
+      <select id="filter-upgrade">
+        <option value="">All Upgrades</option>
+        <option value="Upgradeable">Upgradeable</option>
+        <option value="Unlimited">Unlimited</option>
+        <option value="Not unlimited/Not Upgradable">Not Upgradable</option>
+      </select>
+      <select id="filter-duration">
+        <option value="">All Durations</option>
+        <option value="Unlimited">Unlimited</option>
+        <option value="Limited">Limited</option>
+      </select>
+      <select id="sort-by">
+        <option value="name-asc">Name (A–Z)</option>
+        <option value="name-desc">Name (Z–A)</option>
+        <option value="id-asc">ID (Low → High)</option>
+        <option value="id-desc">ID (High → Low)</option>
+      </select>
+      <div class="view-toggle">
+        <button class="view-btn active" id="btn-grid" onclick="setView('grid')" title="Grid">⊞</button>
+        <button class="view-btn" id="btn-table" onclick="setView('table')" title="Table">☰</button>
+      </div>
+      <button class="reset-btn" onclick="resetFilters()">↺ Reset</button>
+    </div>
+  </div>
+
+  <div class="cat-strip-wrap">
+    <div class="cat-strip" id="cat-strip"></div>
+  </div>
+
+  <div class="content">
+    <div id="items-container"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   ★ CONFIG — update these two values when you know them
+════════════════════════════════════════════════════════════════ */
+const CONFIG = {
+  // ── Icons ──────────────────────────────────────────────────────
+  // Set to true once you have converted the .dds spritesheets to PNG.
+  // Everything else is already wired up — just flip this flag.
+  ICONS_ENABLED: false,
+
+  // Extension of your converted spritesheet files (.png or .jpg)
+  ICON_EXT: '.png',
+
+  // Folder containing the spritesheet images (relative to index.html)
+  ICONS_DIR: 'assets/icons/',
+
+  // ── Data files ─────────────────────────────────────────────────
+  // Relative paths — work automatically on GitHub Pages once committed
+  DATA_FILES: {
+    items:   'data/iteminfo.cdb.json',
+    weapons: 'data/itemweaponsinfo.cdb.json',
+    icons:   'data/iconsinfo.cdb.json'   // still loaded so data is ready when icons are enabled
+  }
+
+  /*
+  ── HOW SPRITESHEET ICONS WORK (ready to enable) ──────────────────
+  Each entry in iconsinfo.cdb.json has:
+    ii_id       → matched against item's ii_iconsmall field
+    ii_filename → spritesheet image (e.g. "icon_costume_HAIR_A_01.dds")
+    ii_offset   → index of this icon within the sheet (0-based)
+    ii_width    → icon width  in px (e.g. 102)
+    ii_height   → icon height in px (e.g. 84)
+    ii_filesize → spritesheet width in px (e.g. 512)  ← used to calc columns
+
+  Sprite math:
+    columns = Math.floor(ii_filesize / ii_width)
+    x       = (ii_offset % columns) * ii_width
+    y       = Math.floor(ii_offset / columns) * ii_height
+
+  CSS rendering (applied inline per icon element):
+    background-image:    url('assets/icons/icon_costume_HAIR_A_01.png')
+    background-position: -Xpx -Ypx
+    background-size:     auto   (or explicit sheet width × height)
+    width: ii_width px;  height: ii_height px
+  ─────────────────────────────────────────────────────────────────*/
+};
+
+/* ════════════════════════════════════════════════════════════════
+   CATEGORY CONFIG
+════════════════════════════════════════════════════════════════ */
+const CATEGORIES = {
+  'Pandora':          '#9900FF',
+  'Naomi':            '#FF69B4',
+  'Kai':              '#00CC44',
+  'CHIP':             '#1155CC',
+  'Knox':             '#FF6600',
+  'Simon':            '#334488',
+  'Sophita':          '#CCB800',
+  'Amelia':           '#5aaa5a',
+  'Sharkill':         '#CC2200',
+  'Accessories':      '#00AAAA',
+  'Melee':            '#5aaa70',
+  'Rifle':            '#4a9a60',
+  'Shotgun':          '#3a8a50',
+  'Sniper':           '#2a7a40',
+  'MicroGun':         '#1a6a30',
+  'Bazooka':          '#0a5a20',
+  'Grenade Launcher': '#004a10',
+  'Other Items':      '#607080',
+  'Banned Items':     '#7a1010'
+};
+
+const UPGRADE_CONFIG = {
+  'Melee':            {'5':'Unlimited - Power',       '6':'Unlimited - Run Speed',   '7':'Unlimited - Range'},
+  'Rifle':            {'5':'Unlimited - Power',       '6':'Unlimited - Accuracy',    '7':'Unlimited - Ammo Capacity'},
+  'Shotgun':          {'5':'Unlimited - Power',       '6':'Unlimited - Firing Rate', '7':'Unlimited - Reload Speed'},
+  'Sniper':           {'5':'Unlimited - Reload Speed','6':'Unlimited - Zoom Speed',  '7':'Unlimited - Power'},
+  'MicroGun':         {'5':'Unlimited - Warm Up Time','6':'Unlimited - Power',       '7':'Unlimited - Run Speed'},
+  'Bazooka':          {'5':'Unlimited - Firing Rate', '6':'Unlimited - Power',       '7':'Unlimited - Projectile Speed'},
+  'Grenade Launcher': {'5':'Unlimited - Blast Radius','6':'Unlimited - Power',       '7':'Unlimited - Firing Rate'}
+};
+
+/* ════════════════════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════════════════════ */
+let allItems       = [];
+let iconData       = {};   // ii_id → {sheet, offset, w, h, cols} — populated when ICONS_ENABLED
+let activeCategory = 'All';
+let currentView    = 'grid';
+
+/* ════════════════════════════════════════════════════════════════
+   LOADING
+════════════════════════════════════════════════════════════════ */
+function setStep(id, state) { // state: 'active' | 'done'
+  const el = document.getElementById(id);
+  el.classList.remove('active','done');
+  el.classList.add(state);
+}
+function setBar(pct) {
+  document.getElementById('load-bar').style.width = pct + '%';
+}
+function showLoadError(msg) {
+  const e = document.getElementById('load-error');
+  const b = document.getElementById('retry-btn');
+  e.textContent = '❌ ' + msg;
+  e.style.display = 'block';
+  b.style.display = 'inline-block';
+}
+
+async function loadAllData() {
+  // Reset UI
+  document.getElementById('app').style.display = 'none';
+  const ls = document.getElementById('loading-screen');
+  ls.style.display = 'flex'; ls.classList.remove('fade-out');
+  ['step-items','step-weapons','step-build'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('active','done');
+  });
+  document.getElementById('load-error').style.display = 'none';
+  document.getElementById('retry-btn').style.display = 'none';
+  setBar(0);
+
+  try {
+    // ── Fetch iteminfo ──────────────────────────────────────────
+    setStep('step-items','active'); setBar(5);
+    let itemsRaw;
+    try {
+      const r = await fetch(CONFIG.DATA_FILES.items);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      itemsRaw = await r.json();
+    } catch(e) { throw new Error(`iteminfo.cdb.json — ${e.message}`); }
+    setStep('step-items','done'); setBar(40);
+
+    // ── Fetch weaponsinfo ───────────────────────────────────────
+    setStep('step-weapons','active');
+    let weaponsRaw = [];
+    try {
+      const r = await fetch(CONFIG.DATA_FILES.weapons);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      weaponsRaw = await r.json();
+    } catch(e) {
+      console.warn('itemweaponsinfo.cdb.json not loaded:', e.message);
+    }
+    setStep('step-weapons','done'); setBar(72);
+
+    // ── Fetch iconsinfo (always loaded silently; used only when ICONS_ENABLED) ──
+    let iconsRaw = [];
+    try {
+      const r = await fetch(CONFIG.DATA_FILES.icons);
+      if (r.ok) iconsRaw = await r.json();
+    } catch(e) { /* non-fatal */ }
+
+    // ── Build catalog ───────────────────────────────────────────
+    setStep('step-build','active');
+
+    const norm = v => Array.isArray(v) ? v
+                    : (v && Array.isArray(v.items)) ? v.items
+                    : (v ? [v] : []);
+    const itemArr   = norm(itemsRaw);
+    const weaponArr = norm(weaponsRaw);
+    const iconArr   = norm(iconsRaw);
+
+    // Merge items + weapons by ii_id (iteminfo takes precedence on duplicates)
+    const seen   = new Set();
+    const merged = [];
+    for (const item of [...itemArr, ...weaponArr]) {
+      const key = String(item.ii_id ?? '');
+      if (key && !seen.has(key)) { seen.add(key); merged.push(item); }
+    }
+
+    // Build sprite data lookup (ready for when ICONS_ENABLED is flipped to true)
+    iconData = {};
+    for (const ic of iconArr) {
+      if (ic.ii_id == null) continue;
+      const sheetFile = String(ic.ii_filename || '').replace(/\.dds$/i, CONFIG.ICON_EXT);
+      const w    = ic.ii_width    || 102;
+      const h    = ic.ii_height   || 84;
+      const cols = Math.max(1, Math.floor((ic.ii_filesize || 512) / w));
+      const off  = ic.ii_offset   || 0;
+      iconData[String(ic.ii_id)] = {
+        sheet: CONFIG.ICONS_DIR + sheetFile,
+        x:     (off % cols) * w,
+        y:     Math.floor(off / cols) * h,
+        w, h
+      };
+    }
+
+    // Parse all items
+    allItems = merged.map(item => {
+      const s        = v => v != null ? String(v) : '';
+      const category = determineCategory(s(item.ii_meshfilename));
+      const upgrade  = determineUpgrade(item.ii_id, category);
+
+      // Icon lookup key: prefer ii_iconsmall, fall back to ii_id
+      const iconKey  = item.ii_iconsmall != null ? String(item.ii_iconsmall)
+                     : item.ii_id        != null ? String(item.ii_id)
+                     : null;
+      const sprite   = (CONFIG.ICONS_ENABLED && iconKey && iconData[iconKey])
+                     ? iconData[iconKey] : null;
+
+      return {
+        id: item.ii_id != null ? item.ii_id : '',
+        name:     s(item.ii_name),
+        duration: s(item.ii_name_time),
+        upgrade,
+        file:     s(item.ii_meshfilename),
+        desc:     s(item.ii_desc),
+        category,
+        sprite   // null when icons disabled or not found
+      };
+    });
+
+    setStep('step-build','done'); setBar(100);
+
+    document.getElementById('stat-total').textContent = allItems.length.toLocaleString();
+    document.getElementById('stat-cats').textContent  = new Set(allItems.map(i => i.category)).size;
+
+    buildCategoryStrip();
+    resetFilters();
+
+    setTimeout(() => {
+      ls.classList.add('fade-out');
+      document.getElementById('app').style.display = 'block';
+      setTimeout(() => { ls.style.display = 'none'; }, 420);
+    }, 300);
+
+  } catch(err) {
+    showLoadError(err.message);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   CATEGORISATION (mirrors Google Sheets script exactly)
+════════════════════════════════════════════════════════════════ */
+function determineCategory(filename) {
+  if (!filename || !filename.trim()) return 'Other Items';
+  const lower    = filename.toLowerCase().trim().replace(/\\/g, '/');
+  const segments = lower.split('/');
+  const folder   = segments[0];
+
+  const folderIs = kw => folder === kw || folder.startsWith(kw + '_');
+  const fullHas  = kw => lower.includes(kw);
+
+  // Accessories checked first — nested inside character folders
+  const isAcc = folder.startsWith('acc') ||
+                segments.some(s => s === 'acc');
+  if (isAcc) return 'Accessories';
+
+  if (folderIs('gothloli') || fullHas('gothloli')) return 'Pandora';
+  if (folderIs('girl')     || fullHas('girl'))     return 'Naomi';
+  if (folderIs('elf')      || fullHas('elf'))       return 'Amelia';
+  if (folderIs('sophitia') || fullHas('sophitia')) return 'Sophita';
+  if (folderIs('sophita')  || fullHas('sophita'))  return 'Sophita';
+  if (folderIs('sharkill') || fullHas('sharkill')) return 'Sharkill';
+  if (folderIs('simon')    || fullHas('simon'))    return 'Simon';
+  if (folderIs('monster')  || fullHas('monster'))  return 'CHIP';
+  if (folderIs('mechanic') || fullHas('mechanic')) return 'Knox';
+  if (folderIs('guy'))                             return 'Kai';
+  if (folderIs('sword')    || fullHas('sword'))    return 'Melee';
+  if (folderIs('rifle')    || fullHas('rifle'))    return 'Rifle';
+  if (folderIs('shotgun')  || fullHas('shotgun'))  return 'Shotgun';
+  if (folderIs('sniper')   || fullHas('sniper'))   return 'Sniper';
+  if (folderIs('gatling')  || fullHas('gatling'))  return 'MicroGun';
+  if (folderIs('launcher') || fullHas('launcher')) return 'Bazooka';
+  if (folderIs('grenade')  || fullHas('grenade'))  return 'Grenade Launcher';
+  return 'Other Items';
+}
+
+function determineUpgrade(itemId, category) {
+  const idStr = String(itemId ?? '');
+  if (idStr.length >= 2) {
+    const lastTwo = parseInt(idStr.slice(-2), 10);
+    if (lastTwo >= 50 && lastTwo <= 59) return 'Upgradeable';
+  }
+  const ups = UPGRADE_CONFIG[category];
+  if (ups) { const m = ups[idStr.slice(-1)]; if (m) return m; }
+  return 'Not unlimited/Not Upgradable';
+}
+
+/* ════════════════════════════════════════════════════════════════
+   CATEGORY STRIP
+════════════════════════════════════════════════════════════════ */
+function buildCategoryStrip() {
+  const counts = {};
+  allItems.forEach(i => { counts[i.category] = (counts[i.category] || 0) + 1; });
+  const strip = document.getElementById('cat-strip');
+  let html = `<button class="cat-btn active" data-cat="All"
+    onclick="setCategory('All')" style="--cat-color:var(--accent2)">
+    <span class="cat-dot" style="background:var(--accent2)"></span>
+    All <span style="color:var(--text3);font-size:10px">(${allItems.length.toLocaleString()})</span>
+  </button>`;
+  Object.entries(CATEGORIES).forEach(([name, color]) => {
+    if (!counts[name]) return;
+    html += `<button class="cat-btn" data-cat="${name}"
+      onclick="setCategory('${esc(name)}')" style="--cat-color:${color}">
+      <span class="cat-dot" style="background:${color}"></span>
+      ${esc(name)} <span style="color:var(--text3);font-size:10px">(${counts[name].toLocaleString()})</span>
+    </button>`;
+  });
+  strip.innerHTML = html;
+}
+
+function setCategory(cat) {
+  activeCategory = cat;
+  document.querySelectorAll('.cat-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.cat === cat));
+  render();
+}
+
+/* ════════════════════════════════════════════════════════════════
+   FILTERS + SORT
+════════════════════════════════════════════════════════════════ */
+function getFiltered() {
+  const q   = document.getElementById('search').value.toLowerCase().trim();
+  const upg = document.getElementById('filter-upgrade').value;
+  const dur = document.getElementById('filter-duration').value;
+  const srt = document.getElementById('sort-by').value;
+
+  let items = allItems;
+  if (activeCategory !== 'All') items = items.filter(i => i.category === activeCategory);
+  if (q) items = items.filter(i =>
+    i.name.toLowerCase().includes(q) ||
+    String(i.id).includes(q) ||
+    i.desc.toLowerCase().includes(q) ||
+    i.file.toLowerCase().includes(q)
+  );
+  if (upg) {
+    if (upg === 'Unlimited') items = items.filter(i => i.upgrade.startsWith('Unlimited'));
+    else                     items = items.filter(i => i.upgrade === upg);
+  }
+  if (dur) {
+    if (dur === 'Unlimited') items = items.filter(i => i.duration === 'Unlimited');
+    else                     items = items.filter(i => i.duration !== 'Unlimited' && i.duration !== '');
+  }
+  return [...items].sort((a,b) => {
+    switch(srt){
+      case 'name-asc':  return a.name.localeCompare(b.name);
+      case 'name-desc': return b.name.localeCompare(a.name);
+      case 'id-asc':    return Number(a.id) - Number(b.id);
+      case 'id-desc':   return Number(b.id) - Number(a.id);
+    }
+    return 0;
+  });
+}
+
+function resetFilters() {
+  document.getElementById('search').value = '';
+  document.getElementById('filter-upgrade').value = '';
+  document.getElementById('filter-duration').value = '';
+  document.getElementById('sort-by').value = 'name-asc';
+  activeCategory = 'All';
+  document.querySelectorAll('.cat-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.cat === 'All'));
+  render();
+}
+
+/* ════════════════════════════════════════════════════════════════
+   RENDER
+════════════════════════════════════════════════════════════════ */
+function render() {
+  const items = getFiltered();
+  const cont  = document.getElementById('items-container');
+  document.getElementById('stat-showing').textContent = items.length.toLocaleString();
+
+  if (!items.length) {
+    cont.innerHTML = `<div class="empty">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <p>No items match your filters.</p></div>`;
+    return;
+  }
+  currentView === 'grid' ? renderGrid(items, cont) : renderTable(items, cont);
+}
+
+/**
+ * Returns the HTML for an item icon.
+ * - When ICONS_ENABLED=false: always shows a category-coloured placeholder.
+ * - When ICONS_ENABLED=true:  renders the sprite clipped from the spritesheet
+ *   using CSS background-position, with a placeholder fallback.
+ */
+function iconHtml(item, size) {
+  if (CONFIG.ICONS_ENABLED && item.sprite) {
+    const sp  = item.sprite;
+    const dim = size === 'card' ? 56 : 30;
+    // Scale factor so the icon fits inside dim×dim
+    const scale  = dim / Math.max(sp.w, sp.h);
+    const sw     = Math.round(sp.w * scale);
+    const sh     = Math.round(sp.h * scale);
+    const bx     = -Math.round(sp.x * scale);
+    const by     = -Math.round(sp.y * scale);
+    // We need the full spritesheet scaled dimensions too
+    // Use a large background-size so the sheet scales proportionally
+    const bsW = 'auto'; // let the browser infer from the image
+    const style = [
+      `width:${sw}px`,`height:${sh}px`,
+      `background-image:url('${sp.sheet}')`,
+      `background-position:${bx}px ${by}px`,
+      `background-size:auto`,
+      `image-rendering:pixelated`,
+      `display:inline-block`,`flex-shrink:0`
+    ].join(';');
+    const wrapCls = size === 'card' ? 'card-icon' : '';
+    return `<span class="${wrapCls}" style="${style}" title="${esc(item.name)}"></span>`;
+  }
+
+  // Placeholder (icons disabled or sprite not found)
+  const color = CATEGORIES[item.category] || '#607080';
+  const dim   = size === 'card' ? 44 : 26;
+  const fs    = size === 'card' ? 18 : 13;
+  const style = [
+    `width:${dim}px`,`height:${dim}px`,
+    `border-radius:${size === 'card' ? 8 : 5}px`,
+    `background:${color}22`,
+    `border:1px solid ${color}55`,
+    `display:flex`,`align-items:center`,`justify-content:center`,
+    `font-size:${fs}px`,`color:${color}`,`flex-shrink:0`
+  ].join(';');
+  const letter = (item.name || '?')[0].toUpperCase();
+  return `<span style="${style}">${letter}</span>`;
+}
+
+function upgClass(u) {
+  if (u === 'Not unlimited/Not Upgradable') return 'badge-up-no';
+  if (u === 'Upgradeable')                  return 'badge-up-able';
+  return 'badge-up-yes';
+}
+
+// ── Grid ──────────────────────────────────────────────────────────
+const BATCH = 150;
+
+function renderGrid(items, cont) {
+  let html = '<div class="grid-view">';
+  const first = items.slice(0, BATCH);
+  first.forEach((item, i) => {
+    const color = CATEGORIES[item.category] || '#607080';
+    html += gridCard(item, color, Math.min(i * 6, 120));
+  });
+  html += '</div>';
+  cont.innerHTML = html;
+
+  if (items.length > BATCH) {
+    const grid = cont.querySelector('.grid-view');
+    let idx = BATCH;
+    function more() {
+      if (idx >= items.length) return;
+      const end = Math.min(idx + BATCH, items.length);
+      const tmp = document.createElement('div');
+      let h = '';
+      for (let i = idx; i < end; i++) {
+        const item = items[i];
+        h += gridCard(item, CATEGORIES[item.category] || '#607080', 0);
+      }
+      tmp.innerHTML = h;
+      while (tmp.firstChild) grid.appendChild(tmp.firstChild);
+      idx = end;
+      requestAnimationFrame(more);
+    }
+    requestAnimationFrame(more);
+  }
+}
+
+function gridCard(item, color, delay) {
+  return `<div class="item-card" style="--cat-color:${color};animation-delay:${delay}ms">
+    <div class="card-top-bar"></div>
+    <div class="card-icon-wrap">${iconHtml(item,'card')}</div>
+    <div class="card-body">
+      <div class="card-header">
+        <div class="card-name">${esc(item.name)||'(no name)'}</div>
+        <div class="card-id" onclick="copyId('${esc(String(item.id))}')" title="Click to copy">${esc(String(item.id))}</div>
+      </div>
+      ${item.desc ? `<div class="card-desc">${esc(item.desc)}</div>` : ''}
+      <div class="card-badges">
+        <span class="badge badge-cat" style="--cat-color:${color}">${esc(item.category)}</span>
+        <span class="badge ${upgClass(item.upgrade)}">${esc(item.upgrade)}</span>
+        ${item.duration ? `<span class="badge badge-dur">${esc(item.duration)}</span>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Table ─────────────────────────────────────────────────────────
+function renderTable(items, cont) {
+  let html = `<div class="table-wrap"><table>
+  <thead><tr>
+    <th style="width:44px"></th>
+    <th onclick="tblSort('id')">ID</th>
+    <th onclick="tblSort('name')">Name</th>
+    <th>Duration</th>
+    <th>Upgrades</th>
+    <th>Category</th>
+    <th>File</th>
+    <th>Description</th>
+  </tr></thead><tbody>`;
+
+  items.forEach(item => {
+    const color = CATEGORIES[item.category] || '#607080';
+    html += `<tr style="--cat-color:${color}">
+      <td class="td-icon">${iconHtml(item,'table')}</td>
+      <td class="td-id" onclick="copyId('${esc(String(item.id))}')" title="Copy">${esc(String(item.id))}</td>
+      <td class="td-name"><span class="row-bar"></span>${esc(item.name)}</td>
+      <td>${esc(item.duration)}</td>
+      <td><span class="badge ${upgClass(item.upgrade)}">${esc(item.upgrade)}</span></td>
+      <td><span class="badge badge-cat" style="--cat-color:${color}">${esc(item.category)}</span></td>
+      <td class="td-file" title="${esc(item.file)}">${esc(item.file)}</td>
+      <td class="td-desc" title="${esc(item.desc)}">${esc(item.desc)}</td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  cont.innerHTML = html;
+}
+
+function tblSort(f) {
+  const s = document.getElementById('sort-by');
+  if (f === 'id') s.value = s.value === 'id-asc' ? 'id-desc' : 'id-asc';
+  else            s.value = s.value === 'name-asc' ? 'name-desc' : 'name-asc';
+  render();
+}
+
+/* ════════════════════════════════════════════════════════════════
+   UI HELPERS
+════════════════════════════════════════════════════════════════ */
+function setView(v) {
+  currentView = v;
+  document.getElementById('btn-grid').classList.toggle('active', v === 'grid');
+  document.getElementById('btn-table').classList.toggle('active', v === 'table');
+  render();
+}
+
+let dark = true;
+document.getElementById('theme-btn').addEventListener('click', () => {
+  dark = !dark;
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  document.getElementById('theme-btn').textContent = dark ? '☀️' : '🌙';
+});
+
+function copyId(id) {
+  navigator.clipboard.writeText(id).catch(() => {
+    const t = document.createElement('textarea');
+    t.value = id; document.body.appendChild(t);
+    t.select(); document.execCommand('copy'); t.remove();
+  });
+  showToast('📋 Copied: ' + id);
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let searchTimer;
+document.getElementById('search').addEventListener('input', () => {
+  clearTimeout(searchTimer); searchTimer = setTimeout(render, 180);
+});
+document.getElementById('filter-upgrade').addEventListener('change', render);
+document.getElementById('filter-duration').addEventListener('change', render);
+document.getElementById('sort-by').addEventListener('change', render);
+
+/* ── Kick off data load on page open ── */
+loadAllData();
+</script>
+</body>
+</html>
