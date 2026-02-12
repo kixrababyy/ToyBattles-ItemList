@@ -249,7 +249,7 @@ option{background:var(--surface)}
 .card-top-bar{height:3px;background:var(--cat-color,var(--accent))}
 .card-icon-wrap{
   display:flex;align-items:center;justify-content:center;
-  height:72px;background:var(--bg3);border-bottom:1px solid var(--border);
+  height:110px;background:var(--bg3);border-bottom:1px solid var(--border);
   overflow:hidden;
 }
 .card-icon{
@@ -280,12 +280,12 @@ option{background:var(--surface)}
 /* Clean big ID box */
 .card-id-box {
   font-family:'Share Tech Mono',monospace;
-  font-size:16px;font-weight:700;
+  font-size:12px;font-weight:600;
   color:var(--accent2);
   background:var(--bg);
   border:1px solid var(--border2);
   border-radius:6px;
-  padding:6px 12px;
+  padding:4px 9px;
   cursor:pointer;
   transition:all .18s;
   letter-spacing:.5px;
@@ -848,7 +848,7 @@ function render() {
 function iconHtml(item, size) {
   if (CONFIG.ICONS_ENABLED && item.sprite) {
     const sp    = item.sprite;
-    const dim   = size === 'card' ? 56 : 30;
+    const dim   = size === 'card' ? 90 : 30;
     const scale = dim / Math.max(sp.w, sp.h);
     const sw    = Math.round(sp.w * scale);
     const sh    = Math.round(sp.h * scale);
@@ -866,8 +866,8 @@ function iconHtml(item, size) {
     return `<span class="${size==='card'?'card-icon':''}" style="${style}" title="${esc(item.name)}"></span>`;
   }
   const color = CATEGORIES[item.category] || '#607080';
-  const dim   = size === 'card' ? 44 : 26;
-  const fs    = size === 'card' ? 18 : 13;
+  const dim   = size === 'card' ? 72 : 26;
+  const fs    = size === 'card' ? 28 : 13;
   const style = [
     `width:${dim}px`,`height:${dim}px`,
     `border-radius:${size==='card'?8:5}px`,
