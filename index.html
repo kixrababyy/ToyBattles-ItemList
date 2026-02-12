@@ -276,6 +276,46 @@ option{background:var(--surface)}
   cursor:pointer;transition:all .15s;flex-shrink:0;
 }
 .card-id:hover{border-color:var(--accent2);color:var(--accent2)}
+
+/* Big copyable ID shown at bottom of card */
+.card-id-big{
+  font-family:'Share Tech Mono',monospace;
+  font-size:15px;font-weight:700;
+  color:var(--accent2);
+  background:var(--bg3);border:1px solid var(--border);
+  padding:5px 10px;border-radius:6px;
+  cursor:pointer;transition:all .18s;
+  letter-spacing:.5px;white-space:nowrap;
+  display:inline-block;
+}
+.card-id-big:hover{border-color:var(--accent2);background:var(--surface2);color:#fff}
+
+/* Variant duration pills */
+.variant-pills{
+  display:flex;flex-wrap:wrap;gap:4px;
+  margin-bottom:8px;
+}
+.variant-pill{
+  font-size:10px;font-weight:600;
+  padding:3px 9px;border-radius:10px;
+  border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text3);
+  cursor:pointer;transition:all .15s;
+  white-space:nowrap;
+}
+.variant-pill:hover{border-color:var(--accent2);color:var(--text)}
+.variant-pill.active{
+  background:var(--cat-color,var(--accent));
+  border-color:var(--cat-color,var(--accent));
+  color:#fff;filter:brightness(.9);
+}
+
+/* Footer row: big ID + upgrade badge side by side */
+.card-footer{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:8px;flex-wrap:wrap;
+}
+
 .card-desc{
   font-size:11px;color:var(--text2);line-height:1.5;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
@@ -390,7 +430,7 @@ td.td-desc{max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:no
   <div class="stats-bar">
     <div class="stats-inner">
       <div class="stat"><span class="stat-num" id="stat-total">0</span><span class="stat-label">Total Items</span></div>
-      <div class="stat"><span class="stat-num" id="stat-showing">0</span><span class="stat-label">Showing</span></div>
+      <div class="stat"><span class="stat-num" id="stat-showing">0</span><span class="stat-label">Unique Items</span></div>
       <div class="stat"><span class="stat-num" id="stat-cats">0</span><span class="stat-label">Categories</span></div>
       <div class="stat" id="stat-icons-wrap" style="display:none"><span class="stat-num" id="stat-icons">0</span><span class="stat-label">With Icons</span></div>
     </div>
@@ -805,14 +845,61 @@ function resetFilters() {
 }
 
 /* ════════════════════════════════════════════════════════════════
+   GROUPING — collapse duplicates by name, keep variants as pills
+════════════════════════════════════════════════════════════════ */
+// Duration sort order — Unlimited first, then longest to shortest
+const DUR_ORDER = ['Unlimited','365 Days','90 Days','30 Days','7 Days','3 Days','1 Day'];
+function durRank(d) {
+  const i = DUR_ORDER.findIndex(x => d && d.toLowerCase().includes(x.toLowerCase().replace(' days','').replace(' day','')));
+  if (!d || d === '') return 99;
+  if (d.toLowerCase() === 'unlimited') return 0;
+  const m = d.match(/(\d+)/);
+  if (m) return 100 - parseInt(m[1], 10); // larger days = lower rank = earlier
+  return 50;
+}
+
+let renderedGroups = []; // global — lets selectVariant() look up by index
+
+function groupItems(items) {
+  const map = new Map();
+  for (const item of items) {
+    const key = (item.name || '').toLowerCase().trim() || String(item.id);
+    if (!map.has(key)) {
+      map.set(key, {
+        name:     item.name,
+        category: item.category,
+        desc:     item.desc,
+        file:     item.file,
+        sprite:   item.sprite,
+        variants: []
+      });
+    }
+    map.get(key).variants.push({
+      id:      item.id,
+      duration: item.duration,
+      upgrade:  item.upgrade
+    });
+  }
+  // Sort variants: Unlimited first, then by descending day count
+  for (const g of map.values()) {
+    g.variants.sort((a, b) => durRank(a.duration) - durRank(b.duration));
+  }
+  return [...map.values()];
+}
+
+/* ════════════════════════════════════════════════════════════════
    RENDER
 ════════════════════════════════════════════════════════════════ */
 function render() {
-  const items = getFiltered();
-  const cont  = document.getElementById('items-container');
-  document.getElementById('stat-showing').textContent = items.length.toLocaleString();
+  const items  = getFiltered();
+  const groups = groupItems(items);
+  renderedGroups = groups;
+  const cont   = document.getElementById('items-container');
 
-  if (!items.length) {
+  // "Showing" = unique item names
+  document.getElementById('stat-showing').textContent = groups.length.toLocaleString();
+
+  if (!groups.length) {
     cont.innerHTML = `<div class="empty">
       <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -820,7 +907,7 @@ function render() {
       <p>No items match your filters.</p></div>`;
     return;
   }
-  currentView === 'grid' ? renderGrid(items, cont) : renderTable(items, cont);
+  currentView === 'grid' ? renderGrid(groups, cont) : renderTable(groups, cont);
 }
 
 /**
@@ -877,83 +964,121 @@ function upgClass(u) {
 // ── Grid ──────────────────────────────────────────────────────────
 const BATCH = 150;
 
-function renderGrid(items, cont) {
+function renderGrid(groups, cont) {
   let html = '<div class="grid-view">';
-  const first = items.slice(0, BATCH);
-  first.forEach((item, i) => {
-    const color = CATEGORIES[item.category] || '#607080';
-    html += gridCard(item, color, Math.min(i * 6, 120));
+  groups.slice(0, BATCH).forEach((g, i) => {
+    html += gridCard(g, i, Math.min(i * 5, 120));
   });
   html += '</div>';
   cont.innerHTML = html;
 
-  if (items.length > BATCH) {
+  if (groups.length > BATCH) {
     const grid = cont.querySelector('.grid-view');
     let idx = BATCH;
     function more() {
-      if (idx >= items.length) return;
-      const end = Math.min(idx + BATCH, items.length);
+      if (idx >= groups.length) return;
+      const end = Math.min(idx + BATCH, groups.length);
       const tmp = document.createElement('div');
       let h = '';
-      for (let i = idx; i < end; i++) {
-        const item = items[i];
-        h += gridCard(item, CATEGORIES[item.category] || '#607080', 0);
-      }
+      for (let i = idx; i < end; i++) h += gridCard(groups[i], i, 0);
       tmp.innerHTML = h;
       while (tmp.firstChild) grid.appendChild(tmp.firstChild);
-      idx = end;
-      requestAnimationFrame(more);
+      idx = end; requestAnimationFrame(more);
     }
     requestAnimationFrame(more);
   }
 }
 
-function gridCard(item, color, delay) {
+function gridCard(group, gid, delay) {
+  const color   = CATEGORIES[group.category] || '#607080';
+  const first   = group.variants[0];
+  const multi   = group.variants.length > 1;
+
+  // Variant pills — only shown when there are multiple durations
+  let pillsHtml = '';
+  if (multi) {
+    pillsHtml = '<div class="variant-pills">' +
+      group.variants.map((v, i) =>
+        `<button class="variant-pill${i === 0 ? ' active' : ''}"
+          data-vpid="${gid}-${i}"
+          onclick="selectVariant(${gid},${i})"
+        >${esc(v.duration || '?')}</button>`
+      ).join('') +
+      '</div>';
+  }
+
   return `<div class="item-card" style="--cat-color:${color};animation-delay:${delay}ms">
     <div class="card-top-bar"></div>
-    <div class="card-icon-wrap">${iconHtml(item,'card')}</div>
+    <div class="card-icon-wrap">${iconHtml(group, 'card')}</div>
     <div class="card-body">
       <div class="card-header">
-        <div class="card-name">${esc(item.name)||'(no name)'}</div>
-        <div class="card-id" onclick="copyId('${esc(String(item.id))}')" title="Click to copy">${esc(String(item.id))}</div>
+        <div class="card-name">${esc(group.name) || '(no name)'}</div>
       </div>
-      ${item.desc ? `<div class="card-desc">${esc(item.desc)}</div>` : ''}
+      ${group.desc ? `<div class="card-desc">${esc(group.desc)}</div>` : ''}
+      ${pillsHtml}
+      <div class="card-footer">
+        <div class="card-id-big" id="cid-${gid}"
+          data-currentid="${first.id}"
+          onclick="copyCardId(this)"
+          title="Click to copy ID">${esc(String(first.id))}</div>
+        <span class="badge ${upgClass(first.upgrade)}" id="cupg-${gid}">${esc(first.upgrade)}</span>
+      </div>
       <div class="card-badges">
-        <span class="badge badge-cat" style="--cat-color:${color}">${esc(item.category)}</span>
-        <span class="badge ${upgClass(item.upgrade)}">${esc(item.upgrade)}</span>
-        ${item.duration ? `<span class="badge badge-dur">${esc(item.duration)}</span>` : ''}
+        <span class="badge badge-cat" style="--cat-color:${color}">${esc(group.category)}</span>
       </div>
     </div>
   </div>`;
 }
 
 // ── Table ─────────────────────────────────────────────────────────
-function renderTable(items, cont) {
+function renderTable(groups, cont) {
   let html = `<div class="table-wrap"><table>
   <thead><tr>
     <th style="width:44px"></th>
-    <th onclick="tblSort('id')">ID</th>
+    <th>ID</th>
     <th onclick="tblSort('name')">Name</th>
-    <th>Duration</th>
+    <th>Durations / IDs</th>
     <th>Upgrades</th>
     <th>Category</th>
-    <th>File</th>
     <th>Description</th>
   </tr></thead><tbody>`;
 
-  items.forEach(item => {
-    const color = CATEGORIES[item.category] || '#607080';
+  groups.forEach((group, gid) => {
+    const color = CATEGORIES[group.category] || '#607080';
+    const first = group.variants[0];
+    const multi = group.variants.length > 1;
+
+    // Variant pills for table — clicking selects & copies that variant's ID
+    const varCells = multi
+      ? group.variants.map((v, i) =>
+          `<button class="variant-pill${i===0?' active':''}"
+            data-vpid="${gid}-${i}"
+            onclick="selectVariant(${gid},${i})"
+            style="margin-bottom:2px"
+          >${esc(v.duration||'?')} <span style="font-family:'Share Tech Mono',monospace;font-size:9px;opacity:.7">${esc(String(v.id))}</span></button>`
+        ).join('')
+      : `<span style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--text3)">${esc(String(first.id))}</span>`;
+
     html += `<tr style="--cat-color:${color}">
-      <td class="td-icon">${iconHtml(item,'table')}</td>
-      <td class="td-id" onclick="copyId('${esc(String(item.id))}')" title="Copy">${esc(String(item.id))}</td>
-      <td class="td-name"><span class="row-bar"></span>${esc(item.name)}</td>
-      <td>${esc(item.duration)}</td>
-      <td><span class="badge ${upgClass(item.upgrade)}">${esc(item.upgrade)}</span></td>
-      <td><span class="badge badge-cat" style="--cat-color:${color}">${esc(item.category)}</span></td>
-      <td class="td-file" title="${esc(item.file)}">${esc(item.file)}</td>
-      <td class="td-desc" title="${esc(item.desc)}">${esc(item.desc)}</td>
+      <td class="td-icon">${iconHtml(group,'table')}</td>
+      <td>
+        <div class="card-id-big" id="cid-${gid}"
+          data-currentid="${first.id}"
+          onclick="copyCardId(this)"
+          title="Click to copy"
+          style="font-size:13px;padding:4px 8px"
+        >${esc(String(first.id))}</div>
+      </td>
+      <td class="td-name"><span class="row-bar"></span>${esc(group.name)}</td>
+      <td style="min-width:160px">
+        <div style="display:flex;flex-wrap:wrap;gap:3px">${varCells}</div>
+      </td>
+      <td><span class="badge ${upgClass(first.upgrade)}" id="cupg-${gid}">${esc(first.upgrade)}</span></td>
+      <td><span class="badge badge-cat" style="--cat-color:${color}">${esc(group.category)}</span></td>
+      <td class="td-desc" title="${esc(group.desc)}">${esc(group.desc)}</td>
     </tr>`;
   });
+
   html += '</tbody></table></div>';
   cont.innerHTML = html;
 }
@@ -989,6 +1114,42 @@ function copyId(id) {
     t.select(); document.execCommand('copy'); t.remove();
   });
   showToast('📋 Copied: ' + id);
+}
+
+// Called by the big ID element — reads data-currentid attribute
+function copyCardId(el) {
+  copyId(el.dataset.currentid);
+}
+
+// Called when a variant pill is clicked — updates big ID display + upgrade badge
+function selectVariant(gid, vidx) {
+  const group = renderedGroups[gid];
+  if (!group) return;
+  const v = group.variants[vidx];
+  if (!v) return;
+
+  // Update big ID
+  const idEl = document.getElementById('cid-' + gid);
+  if (idEl) {
+    idEl.textContent    = String(v.id);
+    idEl.dataset.currentid = String(v.id);
+  }
+
+  // Update upgrade badge
+  const upgEl = document.getElementById('cupg-' + gid);
+  if (upgEl) {
+    upgEl.textContent  = v.upgrade;
+    upgEl.className    = 'badge ' + upgClass(v.upgrade);
+  }
+
+  // Update active pill highlight
+  document.querySelectorAll(`[data-vpid^="${gid}-"]`).forEach(pill => {
+    const idx = parseInt(pill.dataset.vpid.split('-')[1], 10);
+    pill.classList.toggle('active', idx === vidx);
+  });
+
+  // Copy the selected ID automatically
+  copyId(String(v.id));
 }
 function showToast(msg) {
   const t = document.getElementById('toast');
