@@ -331,20 +331,10 @@ option{background:var(--surface)}
 .card-id-box:hover{border-color:var(--accent2);background:var(--surface2);color:#fff}
 .tbl-id{font-size:13px;padding:4px 9px;margin-bottom:0}
 
-/* Footer row: ID + variant count badge */
+/* Footer row: ID */
 .card-footer-row{
   display:flex;align-items:center;gap:8px;
   margin-bottom:8px;
-}
-.variant-count-badge{
-  font-family:'Rajdhani',sans-serif;
-  font-size:11px;font-weight:700;
-  background:var(--cat-color, var(--accent));
-  color:#fff;
-  border-radius:10px;
-  padding:2px 8px;
-  opacity:.85;
-  flex-shrink:0;
 }
 
 /* ── Variants toggle + drawer ── */
@@ -382,6 +372,23 @@ option{background:var(--surface)}
   color:var(--accent2);flex-shrink:0;
 }
 .variant-row:hover .variant-id{color:#fff}
+
+/* Duplicate sub-rows (same label, different IDs) */
+.dup-toggle{
+  width:100%;padding:4px 10px;
+  background:transparent;border:none;border-top:1px solid var(--border);
+  font-size:10px;color:var(--text3);cursor:pointer;text-align:left;
+  transition:color .12s, background .12s;
+}
+.dup-toggle:hover{background:var(--bg3);color:var(--accent2)}
+.dup-drawer{display:none}
+.dup-drawer.open{display:block}
+.dup-row{
+  background:var(--bg3) !important;
+  border-left:2px solid var(--border2);
+  padding-left:16px !important;
+  font-size:10px !important;
+}
 
 /* ── Table variant pills ── */
 .tbl-variant{
@@ -1087,46 +1094,71 @@ function renderGrid(groups, cont) {
 
 const WEAPON_CATS = new Set(['Melee','Rifle','Shotgun','Sniper','MicroGun','Bazooka','Grenade Launcher']);
 
+const CHAR_UPGRADE_MAP = {
+  '0': 'Unlimited - Base',
+  '1': 'Unlimited - Run Speed',
+  '2': 'Unlimited - Health'
+};
+
 function variantLabel(v) {
-  const idStr    = String(v.id);
-  const lastTwo  = parseInt(idStr.slice(-2), 10);
-  const lastOne  = parseInt(idStr.slice(-1), 10);
-  const dur      = v.duration || 'Permanent';
-  const isWeapon = WEAPON_CATS.has(v.category);
+  const idStr      = String(v.id);
+  const lastOne    = idStr.slice(-1);
+  const isUnlimited = (v.duration || '').toLowerCase().includes('unlimited');
+  const dur        = v.duration || 'Permanent';
+  const isWeapon   = WEAPON_CATS.has(v.category);
 
   if (isWeapon) {
-    // Suffix 00 = base (no upgrade)
-    if (lastTwo === 0)              return `${dur} — Base`;
-    // Suffix 10–40 = evolution tiers
-    if (lastTwo >= 10 && lastTwo <= 40 && lastTwo % 10 === 0)
-                                    return `${dur} — Tier ${lastTwo / 10}`;
-    // Suffix 50 = upgrade-ready
-    if (lastTwo === 50)             return `${dur} — Upgradeable`;
-    // Suffix 51–59, 61–69, 71–79 = specific upgrades (use the upgrade field)
-    const upg = (v.upgrade && v.upgrade !== 'Not unlimited/Not Upgradable') ? v.upgrade : '';
-    return upg ? `${dur} — ${upg}` : `${dur} — Suffix ${lastTwo}`;
+    if (isUnlimited) {
+      const ups = UPGRADE_CONFIG[v.category];
+      if (ups && ups[lastOne]) return ups[lastOne];   // "Unlimited - Power" etc.
+    }
+    return dur;  // non-unlimited weapon or unrecognised suffix
   }
 
-  // Parts: last digit 0 = primary stat, 1 = secondary stat
-  const statType = (lastOne === 1) ? 'Secondary' : 'Primary';
-  // Duration tier from second-to-last digit position (suffix 00/01, 10/11, 20/21…)
-  const tier     = Math.floor(lastTwo / 10);
-  const TIERS    = ['','Tier 1','Tier 2','Tier 3','Tier 4','Tier 5'];
-  const tierStr  = TIERS[tier] || `Tier ${tier}`;
-  return `${dur} — ${statType}${tierStr ? ' · ' + tierStr : ''}`;
+  // Characters / Parts
+  if (isUnlimited && CHAR_UPGRADE_MAP[lastOne]) return CHAR_UPGRADE_MAP[lastOne];
+  return dur;
+}
+
+/* Collapse variants that share the same label into one visible row.
+   Extras are hidden behind a "+N more" toggle on that row.        */
+function dedupeVariants(variants) {
+  const map = new Map();
+  for (const v of variants) {
+    const lbl = variantLabel(v);
+    if (!map.has(lbl)) {
+      map.set(lbl, { label: lbl, primary: v, extras: [] });
+    } else {
+      map.get(lbl).extras.push(v);
+    }
+  }
+  return [...map.values()];
 }
 
 function gridCard(group, gid) {
-  const color  = CATEGORIES[group.category] || '#607080';
-  const rootId = String(group.rootKey);
-  const count  = group.variants.length;
+  const color   = CATEGORIES[group.category] || '#607080';
+  const rootId  = String(group.rootKey);
+  const deduped = dedupeVariants(group.variants);
+  const uCount  = deduped.length;   // unique variant labels
 
-  const varRows = group.variants.map(v =>
-    `<div class="variant-row" onclick="copyId('${v.id}');event.stopPropagation()">` +
-    `<span class="variant-label">${esc(variantLabel(v))}</span>` +
-    `<span class="variant-id">${esc(String(v.id))}</span>` +
-    `</div>`
-  ).join('');
+  const varRows = deduped.map((dg, di) => {
+    const extrasHtml = dg.extras.length > 0
+      ? `<button class="dup-toggle" onclick="toggleDups('${gid}-${di}',this);event.stopPropagation()">` +
+          `+ ${dg.extras.length} duplicate${dg.extras.length > 1 ? 's' : ''}</button>` +
+        `<div class="dup-drawer" id="dd-${gid}-${di}">` +
+          dg.extras.map(e =>
+            `<div class="variant-row dup-row" onclick="copyId('${e.id}');event.stopPropagation()">` +
+            `<span class="variant-label">${esc(dg.label)}</span>` +
+            `<span class="variant-id">${esc(String(e.id))}</span>` +
+            `</div>`
+          ).join('') +
+        `</div>`
+      : '';
+    return `<div class="variant-row" onclick="copyId('${dg.primary.id}');event.stopPropagation()">` +
+      `<span class="variant-label">${esc(dg.label)}</span>` +
+      `<span class="variant-id">${esc(String(dg.primary.id))}</span>` +
+      `</div>` + extrasHtml;
+  }).join('');
 
   return `<div class="item-card" style="--cat-color:${color}">` +
     `<div class="card-top-bar"></div>` +
@@ -1136,14 +1168,13 @@ function gridCard(group, gid) {
       (group.desc ? `<div class="card-desc">${esc(group.desc)}</div>` : '') +
       `<div class="card-footer-row">` +
         `<div class="card-id-box" onclick="copyId('${rootId}')" title="Click to copy root ID">${esc(rootId)}</div>` +
-        (count > 1 ? `<span class="variant-count-badge">${count}</span>` : '') +
       `</div>` +
       `<div class="card-badges">` +
         `<span class="badge badge-cat" style="--cat-color:${color}">${esc(group.category)}</span>` +
       `</div>` +
-      (count > 1 ?
-        `<button class="variants-toggle" onclick="toggleVariants('${gid}',this);event.stopPropagation()">` +
-        `&#9662; Show ${count} variants</button>` +
+      (uCount > 1 ?
+        `<button class="variants-toggle" data-count="${uCount}" onclick="toggleVariants('${gid}',this);event.stopPropagation()">` +
+        `&#9662; Show ${uCount} variants</button>` +
         `<div class="variants-drawer" id="vd-${gid}">${varRows}</div>`
       : '') +
     `</div>` +
@@ -1154,8 +1185,18 @@ function toggleVariants(gid, btn) {
   const drawer = document.getElementById('vd-' + gid);
   if (!drawer) return;
   const open  = drawer.classList.toggle('open');
-  const count = (familyGroups[gid] || {variants:[]}).variants.length;
+  const count = btn.dataset.count || 0;
   btn.innerHTML = (open ? '&#9652; Hide' : '&#9662; Show') + ' ' + count + ' variants';
+}
+
+function toggleDups(key, btn) {
+  const drawer = document.getElementById('dd-' + key);
+  if (!drawer) return;
+  const open  = drawer.classList.toggle('open');
+  const count = drawer.querySelectorAll('.dup-row').length;
+  btn.textContent = open
+    ? `\u25b4 hide ${count} duplicate${count > 1 ? 's' : ''}`
+    : `+ ${count} duplicate${count > 1 ? 's' : ''}`;
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -1173,12 +1214,13 @@ function renderTable(groups, cont) {
   </tr></thead><tbody>`;
 
   groups.forEach((group, gid) => {
-    const color  = CATEGORIES[group.category] || '#607080';
-    const rootId = String(group.rootKey);
-    const pills  = group.variants.map(v =>
-      `<span class="tbl-variant" onclick="copyId('${v.id}')" title="${esc(variantLabel(v))}">` +
-      `<span style="font-family:'Share Tech Mono',monospace;font-size:10px">${esc(String(v.id))}</span>` +
-      `<span style="font-size:9px;opacity:.55;margin-left:3px">${esc(v.duration||'')}</span>` +
+    const color   = CATEGORIES[group.category] || '#607080';
+    const rootId  = String(group.rootKey);
+    const deduped = dedupeVariants(group.variants);
+    const pills   = deduped.map(dg =>
+      `<span class="tbl-variant" onclick="copyId('${dg.primary.id}')" title="${esc(dg.label)}">` +
+      `<span style="font-family:'Share Tech Mono',monospace;font-size:10px">${esc(String(dg.primary.id))}</span>` +
+      `<span style="font-size:9px;opacity:.55;margin-left:3px">${esc(dg.label)}</span>` +
       `</span>`
     ).join('');
 
