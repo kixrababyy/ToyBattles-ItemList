@@ -874,13 +874,22 @@ function groupItems(items) {
         variants: []
       });
     }
-    map.get(key).variants.push({
-      id:      item.id,
-      duration: item.duration,
-      upgrade:  item.upgrade
-    });
+    const group = map.get(key);
+
+    // Deduplicate by duration — only keep the lowest ID per duration
+    const durKey = (item.duration || '').toLowerCase().trim() || 'none';
+    const existing = group.variants.find(v =>
+      (v.duration || '').toLowerCase().trim() === durKey
+    );
+    if (!existing) {
+      group.variants.push({ id: item.id, duration: item.duration, upgrade: item.upgrade });
+    } else if (Number(item.id) < Number(existing.id)) {
+      // Replace if this one has a lower ID (more "base" variant)
+      existing.id      = item.id;
+      existing.upgrade = item.upgrade;
+    }
   }
-  // Sort variants: Unlimited first, then by descending day count
+  // Sort variants: Unlimited first, then descending day count
   for (const g of map.values()) {
     g.variants.sort((a, b) => durRank(a.duration) - durRank(b.duration));
   }
