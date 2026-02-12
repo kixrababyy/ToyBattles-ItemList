@@ -231,8 +231,9 @@ const val = entry.item_id ?? entry.id ?? entry.Item_ID ?? entry.ID ?? Object.val
 if (val != null) bannedIds.add(String(val));
 }
 }
+console.log('Banned IDs loaded:', bannedIds.size);
 }
-} catch(e) { }
+} catch(e) { console.warn('banned.json not loaded:', e); }
 setStep('step-build','active');
 const norm = v => Array.isArray(v) ? v
 : (v && Array.isArray(v.items)) ? v.items
