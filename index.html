@@ -6,1462 +6,724 @@
 <title>ToyBattles Item Database</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-/* ════════════════════════════════════════════════════════════════
-   THEME VARIABLES
-════════════════════════════════════════════════════════════════ */
-:root {
-  --bg:       #0b0d12; --bg2:      #10131a; --bg3:      #161a24;
-  --surface:  #1c2030; --surface2: #222638;
-  --border:   #253040; --border2:  #344060;
-  --text:     #f0f4ff; --text2:    #9ba8c8; --text3:    #566080;
-  --accent:   #29ABE2; --accent2:  #FFB800;
-  --tb-blue:  #29ABE2; --tb-gold:  #FFB800;
-  --tb-black: #111418;
-  --radius:   8px;
-}
-[data-theme="light"] {
-  --bg:#eef2f8; --bg2:#e0e6f0; --bg3:#d4dcea;
-  --surface:#ffffff; --surface2:#edf1fa;
-  --border:#c8d0e8; --border2:#adb8d8;
-  --text:#111828; --text2:#3d4a70; --text3:#7a88a8;
-  --accent:#29ABE2; --accent2:#e09000;
-}
-
-/* ════════════════════════════════════════════════════════════════
-   RESET & BASE
-════════════════════════════════════════════════════════════════ */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{
-  font-family:'Nunito',sans-serif;
-  background:var(--bg);color:var(--text);
-  min-height:100vh;overflow-x:hidden;
-  transition:background .3s,color .3s;
-}
-
-/* ════════════════════════════════════════════════════════════════
-   LOADING SCREEN
-════════════════════════════════════════════════════════════════ */
-#loading-screen{
-  position:fixed;inset:0;z-index:300;
-  background:var(--bg);
-  background-image:url('assets/background.webp');
-  background-size:cover;background-position:center;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:28px;
-  transition:opacity .4s;
-}
-#loading-screen::before{
-  content:'';position:absolute;inset:0;
-  background:rgba(10,12,18,.82);backdrop-filter:blur(4px);
-}
-#loading-screen>*{position:relative;z-index:1;}
-#loading-screen.fade-out{opacity:0;pointer-events:none}
-.load-logo{
-  display:flex;flex-direction:column;align-items:center;gap:14px;
-}
-.load-logo img{
-  height:100px;width:auto;
-  filter:drop-shadow(0 0 20px rgba(41,171,226,.6));
-  animation:logoFloat 3s ease-in-out infinite;
-}
-.load-logo-text{
-  font-family:'Bangers',cursive;
-  font-size:28px;letter-spacing:2px;color:var(--text2);
-}
-@keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-.load-steps{display:flex;flex-direction:column;gap:10px;width:340px}
-.load-step{
-  display:flex;align-items:center;gap:12px;
-  font-size:13px;color:var(--text3);
-  transition:color .3s;
-}
-.load-step.active{color:var(--text2)}
-.load-step.done{color:#6fcf82}
-.step-dot{
-  width:8px;height:8px;border-radius:50%;
-  background:var(--border2);flex-shrink:0;
-  transition:background .3s;
-}
-.load-step.active .step-dot{background:var(--accent2);animation:pulse 1s infinite}
-.load-step.done   .step-dot{background:#6fcf82}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.load-bar-wrap{
-  width:340px;height:4px;background:var(--border);
-  border-radius:2px;overflow:hidden;
-}
-.load-bar{
-  height:100%;width:0;
-  background:linear-gradient(90deg,var(--tb-blue),var(--tb-gold));
-  transition:width .4s ease;border-radius:2px;
-}
-.load-error{
-  color:#ff8888;font-size:14px;font-weight:600;text-align:center;
-  max-width:340px;background:rgba(180,40,40,.25);
-  border:1px solid rgba(255,100,100,.4);border-radius:8px;
-  padding:10px 14px;display:none;
-}
-.retry-btn{
-  margin-top:10px;padding:8px 20px;
-  background:var(--surface);border:1px solid var(--border2);
-  color:var(--text);border-radius:var(--radius);
-  cursor:pointer;font-size:13px;font-family:'Barlow',sans-serif;
-  transition:border-color .2s;display:none;
-}
-.retry-btn:hover{border-color:var(--accent2)}
-
-
-/* ════════════════════════════════════════════════════════════════
-   HERO HEADER
-════════════════════════════════════════════════════════════════ */
-.site-hero{
-  position:relative;overflow:hidden;
-  background:#0a0c14;
-  border-bottom:3px solid var(--tb-gold);
-}
-.site-hero-bg{
-  position:absolute;inset:0;
-  background-image:url('assets/background.webp');
-  background-size:cover;background-position:center 30%;
-  opacity:.28;filter:saturate(.7);
-}
-.site-hero-overlay{
-  position:absolute;inset:0;
-  background:linear-gradient(
-    to bottom,
-    rgba(10,12,20,.55) 0%,
-    rgba(10,12,20,.82) 80%,
-    rgba(10,12,20,1) 100%
-  );
-}
-.site-hero-inner{
-  position:relative;z-index:2;
-  max-width:1600px;margin:0 auto;
-  padding:22px 28px 18px;
-  display:flex;align-items:center;gap:20px;
-}
-.site-logo{
-  height:72px;width:auto;object-fit:contain;flex-shrink:0;
-  filter:drop-shadow(0 2px 12px rgba(41,171,226,.35));
-}
-.site-title-block{display:flex;flex-direction:column;gap:2px;}
-.site-title{
-  font-family:'Bangers',cursive;
-  font-size:38px;letter-spacing:2px;line-height:1;color:#fff;
-  text-shadow:0 0 20px rgba(41,171,226,.5),2px 2px 0 rgba(0,0,0,.8);
-}
-.site-title .gold{color:var(--tb-gold)}
-.site-subtitle{
-  font-family:'Nunito',sans-serif;
-  font-size:12px;font-weight:600;letter-spacing:3px;
-  text-transform:uppercase;color:var(--tb-blue);opacity:.85;
-}
-
-
-/* ════════════════════════════════════════════════════════════════
-   HERO BUTTONS
-════════════════════════════════════════════════════════════════ */
-.hero-btn{
-  display:inline-flex;align-items:center;gap:7px;
-  background:rgba(0,0,0,.45);
-  border:1px solid rgba(255,255,255,.2);
-  border-radius:8px;padding:8px 16px;cursor:pointer;
-  font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;
-  color:rgba(255,255,255,.85);
-  transition:all .18s;white-space:nowrap;
-  backdrop-filter:blur(6px);letter-spacing:.4px;
-  text-transform:uppercase;
-}
-.hero-btn svg{flex-shrink:0;transition:transform .35s}
-.hero-btn:hover{background:rgba(41,171,226,.22);border-color:var(--tb-blue);color:#fff}
-.hero-btn.reload-btn:hover svg{transform:rotate(180deg)}
-.hero-btn.theme-btn{gap:6px}
-.hero-btn.theme-btn:hover{background:rgba(255,184,0,.18);border-color:var(--tb-gold)}
-
-/* ════════════════════════════════════════════════════════════════
-   VARIANT EXPANSION CARDS (inline grid)
-════════════════════════════════════════════════════════════════ */
-/* In-card variant chip grid */
-.variants-grid-drawer{
-  display:none;margin-top:6px;
-  border-top:1px solid var(--border);
-  padding-top:8px;
-  flex-wrap:wrap;gap:5px;
-}
-.variants-grid-drawer.open{display:flex}
-.vc-chip{
-  display:flex;flex-direction:row;align-items:center;gap:6px;
-  background:var(--bg3);border:1px solid var(--border);
-  border-radius:6px;padding:5px 8px;cursor:pointer;
-  transition:border-color .12s,background .12s;
-  min-width:0;
-}
-.vc-chip:hover{border-color:var(--cat-color,var(--tb-blue));background:var(--surface2)}
-.vc-chip .chip-info{display:flex;flex-direction:column;gap:1px;min-width:0}
-.vc-chip .chip-label{
-  font-size:10px;color:var(--text2);line-height:1.2;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px;
-}
-.vc-chip .chip-id{
-  font-family:'Share Tech Mono',monospace;
-  font-size:11px;font-weight:700;color:var(--tb-gold);
-  white-space:nowrap;
-}
-.vc-chip:hover .chip-id{color:#fff}
-.vc-chip .chip-dup{
-  font-size:9px;color:var(--text3);
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:3px;padding:1px 4px;margin-top:1px;
-}
-
-/* ════════════════════════════════════════════════════════════════
-   STATS BAR
-════════════════════════════════════════════════════════════════ */
-.stats-bar{
-  background:var(--bg2);border-bottom:1px solid var(--border);
-  padding:8px 24px;
-}
-.stats-inner{
-  max-width:1600px;margin:0 auto;
-  display:flex;gap:24px;align-items:center;flex-wrap:wrap;
-}
-.stat{display:flex;align-items:baseline;gap:6px}
-.stat-num{
-  font-family:'Share Tech Mono',monospace;
-  font-size:19px;font-weight:700;color:var(--accent2);
-}
-.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px}
-
-/* ════════════════════════════════════════════════════════════════
-   CONTROLS
-════════════════════════════════════════════════════════════════ */
-.controls{
-  background:var(--bg2);border-bottom:1px solid var(--border);
-  padding:10px 24px;position:sticky;top:0;z-index:90;
-}
-.controls-inner{
-  max-width:1600px;margin:0 auto;
-  display:flex;gap:8px;align-items:center;flex-wrap:wrap;
-}
-.search-wrap{position:relative;flex:1;min-width:180px}
-.search-wrap svg{
-  position:absolute;left:9px;top:50%;transform:translateY(-50%);
-  color:var(--text3);pointer-events:none;
-}
-#search{
-  width:100%;padding:7px 10px 7px 30px;
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);color:var(--text);
-  font-family:'Nunito',sans-serif;font-size:13px;outline:none;
-  transition:border-color .2s;
-}
-#search:focus{border-color:var(--accent2)}
-#search::placeholder{color:var(--text3)}
-select{
-  background:var(--surface);border:1px solid var(--border);
-  color:var(--text);border-radius:var(--radius);
-  font-family:'Nunito',sans-serif;font-size:13px;
-  padding:7px 10px;cursor:pointer;outline:none;transition:border-color .2s;
-}
-select:hover,select:focus{border-color:var(--accent2)}
-option{background:var(--surface)}
-.view-toggle{display:flex;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-.view-btn{
-  background:var(--surface);border:none;border-right:1px solid var(--border);
-  color:var(--text2);padding:7px 12px;cursor:pointer;font-size:13px;
-  transition:all .15s;
-}
-.view-btn:last-child{border-right:none}
-.view-btn.active{background:var(--accent);color:#fff}
-.view-btn:hover:not(.active){background:var(--surface2)}
-.reset-btn{
-  background:transparent;border:1px solid var(--border);
-  color:var(--text2);border-radius:var(--radius);
-  padding:7px 12px;cursor:pointer;font-size:13px;
-  font-family:'Barlow',sans-serif;transition:all .2s;white-space:nowrap;
-}
-.reset-btn:hover{border-color:var(--accent2);color:var(--text)}
-
-/* ════════════════════════════════════════════════════════════════
-   TWO-ROW NAV
-════════════════════════════════════════════════════════════════ */
-.nav-wrap{
-  position:sticky;top:46px;z-index:89;
-}
-/* Row 1: Main tabs */
-.main-tabs-row{
-  background:var(--bg2);
-  border-bottom:1px solid var(--border);
-  padding:0 24px;
-}
-.main-tabs-inner{
-  max-width:1600px;margin:0 auto;display:flex;
-}
-.main-tab{
-  font-family:'Rajdhani',sans-serif;
-  font-size:16px;font-weight:700;letter-spacing:.6px;
-  padding:14px 36px;
-  background:transparent;border:none;
-  color:var(--text3);cursor:pointer;
-  border-bottom:3px solid transparent;
-  margin-bottom:-1px;
-  transition:color .15s,border-color .15s,background .15s;
-}
-.main-tab:hover{color:var(--text);background:var(--surface)}
-.main-tab.active{color:var(--text);background:var(--surface)}
-#tab-characters.active{border-bottom-color:#FF69B4;color:#FF69B4}
-#tab-weapons.active   {border-bottom-color:#5aaa70;color:#5aaa70}
-#tab-other.active     {border-bottom-color:var(--accent2);color:var(--text)}
-#tab-characters:hover {color:#FF69B4}
-#tab-weapons:hover    {color:#5aaa70}
-
-/* Row 2: Sub-tabs */
-.sub-tabs-row{
-  background:var(--bg3);
-  border-bottom:2px solid var(--border);
-  padding:0 24px;
-  overflow-x:auto;scrollbar-width:none;
-}
-.sub-tabs-row::-webkit-scrollbar{display:none}
-.sub-tabs-inner{
-  max-width:1600px;margin:0 auto;display:flex;
-}
-.sub-tab{
-  white-space:nowrap;
-  font-family:'Nunito',sans-serif;font-size:13px;font-weight:500;
-  padding:9px 20px;
-  background:transparent;border:none;
-  color:var(--text2);cursor:pointer;
-  border-bottom:3px solid transparent;
-  margin-bottom:-2px;
-  display:flex;align-items:center;gap:6px;
-  transition:color .15s,border-color .15s,background .15s;
-}
-.sub-tab:hover{color:var(--text);background:var(--surface)}
-.sub-tab.active{
-  color:var(--text);
-  background:var(--surface);
-  border-bottom-color:var(--cat-color,var(--accent2));
-}
-.sub-tab-dot{
-  width:7px;height:7px;border-radius:50%;flex-shrink:0;
-}
-.sub-tab-count{font-size:10px;opacity:.5}
-
-/* ════════════════════════════════════════════════════════════════
-   CONTENT
-════════════════════════════════════════════════════════════════ */
-.content{max-width:1600px;margin:0 auto;padding:18px 24px}
-
-/* ── Grid ── */
-.grid-view{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-  gap:12px;
-}
-.item-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);overflow:hidden;
-  transition:transform .15s,box-shadow .15s,border-color .15s;
-  cursor:default;
-  contain:layout style;
-}
-.item-card:hover{
-  transform:translateY(-2px);
-  border-color:var(--cat-color,var(--border2));
-  box-shadow:0 6px 20px rgba(0,0,0,.4),0 0 0 1px var(--cat-color,var(--accent));
-}
-.card-top-bar{height:3px;background:var(--cat-color,var(--accent))}
-.card-icon-wrap{
-  display:flex;align-items:center;justify-content:center;
-  height:110px;background:var(--bg3);border-bottom:1px solid var(--border);
-  overflow:hidden;
-}
-.card-icon{
-  max-width:96px;max-height:96px;
-  object-fit:contain;image-rendering:pixelated;
-}
-.card-icon-placeholder{
-  width:80px;height:80px;border-radius:10px;
-  background:var(--surface2);border:1px solid var(--border2);
-  display:flex;align-items:center;justify-content:center;
-  font-size:20px;color:var(--text3);
-}
-.card-body{padding:11px 12px}
-.card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:6px}
-.card-name{
-  font-family:'Rajdhani',sans-serif;
-  font-size:14px;font-weight:600;color:var(--text);line-height:1.3;
-}
-.card-id{
-  font-family:'Share Tech Mono',monospace;
-  font-size:10px;color:var(--text3);
-  background:var(--bg3);border:1px solid var(--border);
-  padding:2px 6px;border-radius:4px;white-space:nowrap;
-  cursor:pointer;transition:all .15s;flex-shrink:0;
-}
-.card-id:hover{border-color:var(--accent2);color:var(--accent2)}
-
-.card-id-box {
-  font-family:'Share Tech Mono',monospace;
-  font-size:10px;font-weight:600;
-  color:var(--accent2);
-  background:var(--bg);
-  border:1px solid var(--border2);
-  border-radius:6px;
-  padding:4px 9px;
-  cursor:pointer;
-  transition:all .18s;
-  letter-spacing:.5px;
-  display:inline-block;
-}
-.card-id-box:hover{border-color:var(--accent2);background:var(--surface2);color:#fff}
-.tbl-id{font-size:13px;padding:4px 9px;margin-bottom:0}
-
-/* Footer row: ID */
-.card-footer-row{
-  display:flex;align-items:center;gap:8px;
-  margin-bottom:8px;
-}
-
-/* ── Variants toggle + drawer ── */
-.variants-toggle{
-  width:100%;margin-top:6px;
-  background:var(--bg3);border:1px solid var(--border);
-  border-radius:6px;padding:5px 10px;
-  font-size:11px;font-weight:600;color:var(--text2);
-  cursor:pointer;text-align:left;
-  transition:background .15s, color .15s;
-}
-.variants-toggle:hover{background:var(--surface2);color:var(--text)}
-.variants-drawer{
-  display:none;margin-top:4px;
-  border:1px solid var(--border);border-radius:6px;
-  overflow:hidden;
-}
-.variants-drawer.open{display:block}
-.variant-row{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:6px 10px;cursor:pointer;
-  border-bottom:1px solid var(--border);
-  transition:background .12s;
-  gap:8px;
-}
-.variant-row:last-child{border-bottom:none}
-.variant-row:hover{background:var(--surface2)}
-.variant-label{
-  font-size:11px;color:var(--text2);
-  flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
-.variant-id{
-  font-family:'Share Tech Mono',monospace;
-  font-size:11px;font-weight:600;
-  color:var(--accent2);flex-shrink:0;
-}
-.variant-row:hover .variant-id{color:#fff}
-
-/* Duplicate sub-rows (same label, different IDs) */
-.dup-toggle{
-  width:100%;padding:4px 10px;
-  background:transparent;border:none;border-top:1px solid var(--border);
-  font-size:10px;color:var(--text3);cursor:pointer;text-align:left;
-  transition:color .12s, background .12s;
-}
-.dup-toggle:hover{background:var(--bg3);color:var(--accent2)}
-.dup-drawer{display:none}
-.dup-drawer.open{display:block}
-.dup-row{
-  background:var(--bg3) !important;
-  border-left:2px solid var(--border2);
-  padding-left:16px !important;
-  font-size:10px !important;
-}
-
-/* ── Table variant pills ── */
-.tbl-variant{
-  display:inline-flex;align-items:center;gap:3px;
-  background:var(--bg3);border:1px solid var(--border);
-  border-radius:5px;padding:3px 7px;
-  cursor:pointer;transition:border-color .15s, background .15s;
-}
-.tbl-variant:hover{border-color:var(--accent2);background:var(--surface2)}
-
-.card-desc{
-  font-size:11px;color:var(--text2);line-height:1.5;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
-  overflow:hidden;margin-bottom:8px;
-}
-.card-badges{display:flex;flex-wrap:wrap;gap:4px}
-.badge{
-  font-size:9px;font-weight:600;padding:2px 7px;
-  border-radius:10px;text-transform:uppercase;letter-spacing:.4px;
-}
-.badge-cat{color:#fff;background:var(--cat-color,var(--accent));filter:brightness(.85)}
-.badge-up-yes {background:#1a3a20;color:#6fcf82;border:1px solid #2d5a35}
-.badge-up-no  {background:#2a1a1a;color:#cf6f6f;border:1px solid #5a2d2d}
-.badge-up-able{background:#1a2a3a;color:#6faaef;border:1px solid #2d4a6a}
-.badge-dur    {background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
-
-/* ── Table ── */
-.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
-table{width:100%;border-collapse:collapse;font-size:13px}
-thead tr{background:var(--surface2)}
-th{
-  padding:10px 13px;text-align:left;
-  font-family:'Rajdhani',sans-serif;font-size:11px;
-  font-weight:600;letter-spacing:1px;text-transform:uppercase;
-  color:var(--text2);border-bottom:1px solid var(--border);
-  white-space:nowrap;user-select:none;cursor:pointer;
-}
-th:hover{color:var(--text)}
-tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
-tbody tr:last-child{border-bottom:none}
-tbody tr:hover{background:var(--surface2)}
-td{padding:8px 13px;color:var(--text);vertical-align:middle}
-td.td-icon{width:44px;padding:4px 8px;text-align:center}
-td.td-icon img{width:32px;height:32px;object-fit:contain;image-rendering:pixelated;display:block;margin:0 auto}
-td.td-icon .no-icon{width:28px;height:28px;border-radius:5px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text3);margin:0 auto}
-td.td-id{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);cursor:pointer;white-space:nowrap}
-td.td-id:hover{color:var(--accent2)}
-td.td-name{font-weight:500}
-td.td-file{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-td.td-desc{max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2);font-size:12px}
-.row-bar{display:inline-block;width:3px;height:13px;border-radius:2px;margin-right:7px;vertical-align:middle;background:var(--cat-color,var(--accent))}
-
-/* ── Empty ── */
-.empty{text-align:center;padding:70px 20px;color:var(--text3)}
-.empty svg{margin-bottom:14px;opacity:.35}
-.empty p{font-size:14px}
-
-/* ── Toast ── */
-.toast{
-  position:fixed;bottom:22px;left:50%;
-  transform:translateX(-50%) translateY(10px);
-  background:var(--surface2);border:1px solid var(--border2);
-  color:var(--text);padding:9px 18px;border-radius:22px;
-  font-size:12px;z-index:999;opacity:0;
-  transition:all .25s;pointer-events:none;
-  box-shadow:0 4px 16px rgba(0,0,0,.4);
-}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-/* ── Scrollbar ── */
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-::-webkit-scrollbar-thumb:hover{background:var(--accent)}
-
-/* ── Responsive ── */
-@media(max-width:640px){
-  .content{padding:10px}
-  .grid-view{grid-template-columns:repeat(2,1fr);gap:8px}
-  .controls-inner{gap:6px}
-}
-@media(max-width:380px){.grid-view{grid-template-columns:1fr}}
-</style>
+<style>:root{--bg:#0b0d12;--bg2:#10131a;--bg3:#161a24;--surface:#1c2030;--surface2:#222638;--border:#253040;--border2:#344060;--text:#f0f4ff;--text2:#9ba8c8;--text3:#566080;--accent:#29ABE2;--accent2:#FFB800;--tb-blue:#29ABE2;--tb-gold:#FFB800;--tb-black:#111418;--radius:8px}[data-theme="light"]{--bg:#eef2f8;--bg2:#e0e6f0;--bg3:#d4dcea;--surface:#ffffff;--surface2:#edf1fa;--border:#c8d0e8;--border2:#adb8d8;--text:#111828;--text2:#3d4a70;--text3:#7a88a8;--accent:#29ABE2;--accent2:#e09000}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s}#loading-screen{position:fixed;inset:0;z-index:300;background:var(--bg);background-image:url('assets/background.webp');background-size:cover;background-position:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;transition:opacity .4s}#loading-screen::before{content:'';position:absolute;inset:0;background:rgba(10,12,18,.82);backdrop-filter:blur(4px)}#loading-screen>*{position:relative;z-index:1}#loading-screen.fade-out{opacity:0;pointer-events:none}.load-logo{display:flex;flex-direction:column;align-items:center;gap:14px}.load-logo img{height:100px;width:auto;filter:drop-shadow(0 0 20px rgba(41,171,226,.6));animation:logoFloat 3s ease-in-out infinite}.load-logo-text{font-family:'Bangers',cursive;font-size:28px;letter-spacing:2px;color:var(--text2)}@keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}.load-steps{display:flex;flex-direction:column;gap:10px;width:340px}.load-step{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--text3);transition:color .3s}.load-step.active{color:var(--text2)}.load-step.done{color:#6fcf82}.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border2);flex-shrink:0;transition:background .3s}.load-step.active .step-dot{background:var(--accent2);animation:pulse 1s infinite}.load-step.done .step-dot{background:#6fcf82}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}.load-bar-wrap{width:340px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}.load-bar{height:100%;width:0;background:linear-gradient(90deg,var(--tb-blue),var(--tb-gold));transition:width .4s ease;border-radius:2px}.load-error{color:#ff8888;font-size:14px;font-weight:600;text-align:center;max-width:340px;background:rgba(180,40,40,.25);border:1px solid rgba(255,100,100,.4);border-radius:8px;padding:10px 14px;display:none}.retry-btn{margin-top:10px;padding:8px 20px;background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:var(--radius);cursor:pointer;font-size:13px;font-family:'Barlow',sans-serif;transition:border-color .2s;display:none}.retry-btn:hover{border-color:var(--accent2)}.site-hero{position:relative;overflow:hidden;background:#0a0c14;border-bottom:3px solid var(--tb-gold)}.site-hero-bg{position:absolute;inset:0;background-image:url('assets/background.webp');background-size:cover;background-position:center 30%;opacity:.28;filter:saturate(.7)}.site-hero-overlay{position:absolute;inset:0;background:linear-gradient(
+to bottom,rgba(10,12,20,.55) 0%,rgba(10,12,20,.82) 80%,rgba(10,12,20,1) 100%
+)}.site-hero-inner{position:relative;z-index:2;max-width:1600px;margin:0 auto;padding:22px 28px 18px;display:flex;align-items:center;gap:20px}.site-logo{height:72px;width:auto;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 2px 12px rgba(41,171,226,.35))}.site-title-block{display:flex;flex-direction:column;gap:2px}.site-title{font-family:'Bangers',cursive;font-size:38px;letter-spacing:2px;line-height:1;color:#fff;text-shadow:0 0 20px rgba(41,171,226,.5),2px 2px 0 rgba(0,0,0,.8)}.site-title .gold{color:var(--tb-gold)}.site-subtitle{font-family:'Nunito',sans-serif;font-size:12px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--tb-blue);opacity:.85}.hero-btn{display:inline-flex;align-items:center;gap:7px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 16px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,.85);transition:all .18s;white-space:nowrap;backdrop-filter:blur(6px);letter-spacing:.4px;text-transform:uppercase}.hero-btn svg{flex-shrink:0;transition:transform .35s}.hero-btn:hover{background:rgba(41,171,226,.22);border-color:var(--tb-blue);color:#fff}.hero-btn.reload-btn:hover svg{transform:rotate(180deg)}.hero-btn.theme-btn{gap:6px}.hero-btn.theme-btn:hover{background:rgba(255,184,0,.18);border-color:var(--tb-gold)}.variants-grid-drawer{display:none;margin-top:6px;border-top:1px solid var(--border);padding-top:8px;flex-wrap:wrap;gap:5px}.variants-grid-drawer.open{display:flex}.vc-chip{display:flex;flex-direction:row;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 8px;cursor:pointer;transition:border-color .12s,background .12s;min-width:0}.vc-chip:hover{border-color:var(--cat-color,var(--tb-blue));background:var(--surface2)}.vc-chip .chip-info{display:flex;flex-direction:column;gap:1px;min-width:0}.vc-chip .chip-label{font-size:10px;color:var(--text2);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}.vc-chip .chip-id{font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:700;color:var(--tb-gold);white-space:nowrap}.vc-chip:hover .chip-id{color:#fff}.vc-chip .chip-dup{font-size:9px;color:var(--text3);background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:1px 4px;margin-top:1px}.stats-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:8px 24px}.stats-inner{max-width:1600px;margin:0 auto;display:flex;gap:24px;align-items:center;flex-wrap:wrap}.stat{display:flex;align-items:baseline;gap:6px}.stat-num{font-family:'Share Tech Mono',monospace;font-size:19px;font-weight:700;color:var(--accent2)}.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px}.controls{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 24px;position:sticky;top:0;z-index:90}.controls-inner{max-width:1600px;margin:0 auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.search-wrap{position:relative;flex:1;min-width:180px}.search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none}#search{width:100%;padding:7px 10px 7px 30px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'Nunito',sans-serif;font-size:13px;outline:none;transition:border-color .2s}#search:focus{border-color:var(--accent2)}#search::placeholder{color:var(--text3)}select{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:var(--radius);font-family:'Nunito',sans-serif;font-size:13px;padding:7px 10px;cursor:pointer;outline:none;transition:border-color .2s}select:hover,select:focus{border-color:var(--accent2)}option{background:var(--surface)}.view-toggle{display:flex;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}.view-btn{background:var(--surface);border:none;border-right:1px solid var(--border);color:var(--text2);padding:7px 12px;cursor:pointer;font-size:13px;transition:all .15s}.view-btn:last-child{border-right:none}.view-btn.active{background:var(--accent);color:#fff}.view-btn:hover:not(.active){background:var(--surface2)}.reset-btn{background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:var(--radius);padding:7px 12px;cursor:pointer;font-size:13px;font-family:'Barlow',sans-serif;transition:all .2s;white-space:nowrap}.reset-btn:hover{border-color:var(--accent2);color:var(--text)}.nav-wrap{position:sticky;top:46px;z-index:89}.main-tabs-row{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px}.main-tabs-inner{max-width:1600px;margin:0 auto;display:flex}.main-tab{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;letter-spacing:.6px;padding:14px 36px;background:transparent;border:none;color:var(--text3);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s,background .15s}.main-tab:hover{color:var(--text);background:var(--surface)}.main-tab.active{color:var(--text);background:var(--surface)}#tab-characters.active{border-bottom-color:#FF69B4;color:#FF69B4}#tab-weapons.active{border-bottom-color:#5aaa70;color:#5aaa70}#tab-other.active{border-bottom-color:var(--accent2);color:var(--text)}#tab-characters:hover{color:#FF69B4}#tab-weapons:hover{color:#5aaa70}.sub-tabs-row{background:var(--bg3);border-bottom:2px solid var(--border);padding:0 24px;overflow-x:auto;scrollbar-width:none}.sub-tabs-row::-webkit-scrollbar{display:none}.sub-tabs-inner{max-width:1600px;margin:0 auto;display:flex}.sub-tab{white-space:nowrap;font-family:'Nunito',sans-serif;font-size:13px;font-weight:500;padding:9px 20px;background:transparent;border:none;color:var(--text2);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;display:flex;align-items:center;gap:6px;transition:color .15s,border-color .15s,background .15s}.sub-tab:hover{color:var(--text);background:var(--surface)}.sub-tab.active{color:var(--text);background:var(--surface);border-bottom-color:var(--cat-color,var(--accent2))}.sub-tab-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.sub-tab-count{font-size:10px;opacity:.5}.content{max-width:1600px;margin:0 auto;padding:18px 24px}.grid-view{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}.item-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:transform .15s,box-shadow .15s,border-color .15s;cursor:default;contain:layout style}.item-card:hover{transform:translateY(-2px);border-color:var(--cat-color,var(--border2));box-shadow:0 6px 20px rgba(0,0,0,.4),0 0 0 1px var(--cat-color,var(--accent))}.card-top-bar{height:3px;background:var(--cat-color,var(--accent))}.card-icon-wrap{display:flex;align-items:center;justify-content:center;height:110px;background:var(--bg3);border-bottom:1px solid var(--border);overflow:hidden}.card-icon{max-width:96px;max-height:96px;object-fit:contain;image-rendering:pixelated}.card-icon-placeholder{width:80px;height:80px;border-radius:10px;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text3)}.card-body{padding:11px 12px}.card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:6px}.card-name{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;color:var(--text);line-height:1.3}.card-id{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:2px 6px;border-radius:4px;white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0}.card-id:hover{border-color:var(--accent2);color:var(--accent2)}.card-id-box{font-family:'Share Tech Mono',monospace;font-size:10px;font-weight:600;color:var(--accent2);background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:4px 9px;cursor:pointer;transition:all .18s;letter-spacing:.5px;display:inline-block}.card-id-box:hover{border-color:var(--accent2);background:var(--surface2);color:#fff}.tbl-id{font-size:13px;padding:4px 9px;margin-bottom:0}.card-footer-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}.variants-toggle{width:100%;margin-top:6px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--text2);cursor:pointer;text-align:left;transition:background .15s,color .15s}.variants-toggle:hover{background:var(--surface2);color:var(--text)}.variants-drawer{display:none;margin-top:4px;border:1px solid var(--border);border-radius:6px;overflow:hidden}.variants-drawer.open{display:block}.variant-row{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .12s;gap:8px}.variant-row:last-child{border-bottom:none}.variant-row:hover{background:var(--surface2)}.variant-label{font-size:11px;color:var(--text2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.variant-id{font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:600;color:var(--accent2);flex-shrink:0}.variant-row:hover .variant-id{color:#fff}.dup-toggle{width:100%;padding:4px 10px;background:transparent;border:none;border-top:1px solid var(--border);font-size:10px;color:var(--text3);cursor:pointer;text-align:left;transition:color .12s,background .12s}.dup-toggle:hover{background:var(--bg3);color:var(--accent2)}.dup-drawer{display:none}.dup-drawer.open{display:block}.dup-row{background:var(--bg3) !important;border-left:2px solid var(--border2);padding-left:16px !important;font-size:10px !important}.tbl-variant{display:inline-flex;align-items:center;gap:3px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:3px 7px;cursor:pointer;transition:border-color .15s,background .15s}.tbl-variant:hover{border-color:var(--accent2);background:var(--surface2)}.card-desc{font-size:11px;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px}.card-badges{display:flex;flex-wrap:wrap;gap:4px}.badge{font-size:9px;font-weight:600;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.4px}.badge-cat{color:#fff;background:var(--cat-color,var(--accent));filter:brightness(.85)}.badge-up-yes{background:#1a3a20;color:#6fcf82;border:1px solid #2d5a35}.badge-up-no{background:#2a1a1a;color:#cf6f6f;border:1px solid #5a2d2d}.badge-up-able{background:#1a2a3a;color:#6faaef;border:1px solid #2d4a6a}.badge-dur{background:var(--bg3);color:var(--text3);border:1px solid var(--border)}.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}table{width:100%;border-collapse:collapse;font-size:13px}thead tr{background:var(--surface2)}th{padding:10px 13px;text-align:left;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border);white-space:nowrap;user-select:none;cursor:pointer}th:hover{color:var(--text)}tbody tr{border-bottom:1px solid var(--border);transition:background .1s}tbody tr:last-child{border-bottom:none}tbody tr:hover{background:var(--surface2)}td{padding:8px 13px;color:var(--text);vertical-align:middle}td.td-icon{width:44px;padding:4px 8px;text-align:center}td.td-icon img{width:32px;height:32px;object-fit:contain;image-rendering:pixelated;display:block;margin:0 auto}td.td-icon .no-icon{width:28px;height:28px;border-radius:5px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text3);margin:0 auto}td.td-id{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);cursor:pointer;white-space:nowrap}td.td-id:hover{color:var(--accent2)}td.td-name{font-weight:500}td.td-file{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}td.td-desc{max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2);font-size:12px}.row-bar{display:inline-block;width:3px;height:13px;border-radius:2px;margin-right:7px;vertical-align:middle;background:var(--cat-color,var(--accent))}.empty{text-align:center;padding:70px 20px;color:var(--text3)}.empty svg{margin-bottom:14px;opacity:.35}.empty p{font-size:14px}.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:9px 18px;border-radius:22px;font-size:12px;z-index:999;opacity:0;transition:all .25s;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.4)}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--accent)}@media(max-width:640px){.content{padding:10px}.grid-view{grid-template-columns:repeat(2,1fr);gap:8px}.controls-inner{gap:6px}}@media(max-width:380px){.grid-view{grid-template-columns:1fr}}</style>
 </head>
 <body>
-
-<!-- ═══════════════════════════════════════════════════════════════
-     LOADING SCREEN
-════════════════════════════════════════════════════════════════ -->
 <div id="loading-screen">
-  <div class="load-logo"><img src="assets/logo.webp" alt="ToyBattles"><div class="load-logo-text">ITEM DATABASE</div></div>
-  <div class="load-steps">
-    <div class="load-step" id="step-items">
-      <div class="step-dot"></div> Loading iteminfo.cdb.json
-    </div>
-    <div class="load-step" id="step-weapons">
-      <div class="step-dot"></div> Loading itemweaponsinfo.cdb.json
-    </div>
-    <div class="load-step" id="step-build">
-      <div class="step-dot"></div> Building catalog
-    </div>
-  </div>
-  <div class="load-bar-wrap"><div class="load-bar" id="load-bar"></div></div>
-  <div class="load-error" id="load-error"></div>
-  <button class="retry-btn" id="retry-btn" onclick="loadAllData()">↺ Retry</button>
+<div class="load-logo"><img src="assets/logo.webp" alt="ToyBattles"><div class="load-logo-text">ITEM DATABASE</div></div>
+<div class="load-steps">
+<div class="load-step" id="step-items">
+<div class="step-dot"></div> Loading iteminfo.cdb.json
 </div>
-
-<!-- ═══════════════════════════════════════════════════════════════
-     APP
-════════════════════════════════════════════════════════════════ -->
+<div class="load-step" id="step-weapons">
+<div class="step-dot"></div> Loading itemweaponsinfo.cdb.json
+</div>
+<div class="load-step" id="step-build">
+<div class="step-dot"></div> Building catalog
+</div>
+</div>
+<div class="load-bar-wrap"><div class="load-bar" id="load-bar"></div></div>
+<div class="load-error" id="load-error"></div>
+<button class="retry-btn" id="retry-btn" onclick="loadAllData()">↺ Retry</button>
+</div>
 <div id="app" style="display:none">
-
-  <!-- Hero banner -->
-  <div class="site-hero">
-    <div class="site-hero-bg"></div>
-    <div class="site-hero-overlay"></div>
-    <div class="site-hero-inner">
-      <img class="site-logo" src="assets/logo.webp" alt="ToyBattles Logo">
-      <div class="site-title-block">
-        <div class="site-title"><span class="gold">Toy</span>Battles Item Database</div>
-        <div class="site-subtitle">Complete Item Reference</div>
-      </div>
-      <div style="flex:1"></div>
-      <button class="hero-btn reload-btn" onclick="loadAllData()" title="Reload data from JSON files">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-        </svg>Reload Data
-      </button>
-      <button class="hero-btn theme-btn" id="theme-btn" title="Toggle light/dark theme">
-        <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"/>
-        </svg><span id="theme-label">Light</span>
-      </button>
-    </div>
-  </div>
-
-  <div class="stats-bar">
-    <div class="stats-inner">
-      <div class="stat"><span class="stat-num" id="stat-total">0</span><span class="stat-label">Total Items</span></div>
-      <div class="stat"><span class="stat-num" id="stat-showing">0</span><span class="stat-label">Families</span></div>
-      <div class="stat"><span class="stat-num" id="stat-cats">0</span><span class="stat-label">Categories</span></div>
-      <div class="stat" id="stat-icons-wrap" style="display:none"><span class="stat-num" id="stat-icons">0</span><span class="stat-label">With Icons</span></div>
-    </div>
-  </div>
-
-  <div class="controls">
-    <div class="controls-inner">
-      <div class="search-wrap">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input type="text" id="search" placeholder="Search name, ID, description…">
-      </div>
-      <select id="filter-upgrade">
-        <option value="">All Upgrades</option>
-        <option value="Upgradeable">Upgradeable</option>
-        <option value="Unlimited">Unlimited</option>
-        <option value="Not unlimited/Not Upgradable">Not Upgradable</option>
-      </select>
-      <select id="filter-duration">
-        <option value="">Duration</option>
-        <option value="Unlimited">Unlimited</option>
-        <option value="Limited">Limited</option>
-      </select>
-      <select id="sort-by">
-        <option value="name-asc">Name (A–Z)</option>
-        <option value="name-desc">Name (Z–A)</option>
-        <option value="id-asc">ID (Low → High)</option>
-        <option value="id-desc">ID (High → Low)</option>
-      </select>
-      <div class="view-toggle">
-        <button class="view-btn active" id="btn-grid" onclick="setView('grid')" title="Grid">⊞</button>
-        <button class="view-btn" id="btn-table" onclick="setView('table')" title="Table">☰</button>
-      </div>
-      <button class="reset-btn" onclick="resetFilters()">↺ Reset</button>
-    </div>
-  </div>
-
-  <div class="nav-wrap">
-    <!-- Row 1: Main tabs -->
-    <div class="main-tabs-row">
-      <div class="main-tabs-inner">
-        <button class="main-tab active" id="tab-characters" onclick="setMainTab('characters')">
-          👤 Characters
-        </button>
-        <button class="main-tab" id="tab-weapons" onclick="setMainTab('weapons')">
-          🔫 Weapons
-        </button>
-        <button class="main-tab" id="tab-other" onclick="setMainTab('other')">
-          📦 Other
-        </button>
-      </div>
-    </div>
-    <!-- Row 2: Sub-tabs (populated by JS) -->
-    <div class="sub-tabs-row" id="sub-tabs-row">
-      <div class="sub-tabs-inner" id="cat-strip"></div>
-    </div>
-  </div>
-
-  <div class="content">
-    <div id="items-container"></div>
-  </div>
+<div class="site-hero">
+<div class="site-hero-bg"></div>
+<div class="site-hero-overlay"></div>
+<div class="site-hero-inner">
+<img class="site-logo" src="assets/logo.webp" alt="ToyBattles Logo">
+<div class="site-title-block">
+<div class="site-title"><span class="gold">Toy</span>Battles Item Database</div>
+<div class="site-subtitle">Complete Item Reference</div>
 </div>
-
+<div style="flex:1"></div>
+<button class="hero-btn reload-btn" onclick="loadAllData()" title="Reload data from JSON files">
+<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+<path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+</svg>Reload Data
+</button>
+<button class="hero-btn theme-btn" id="theme-btn" title="Toggle light/dark theme">
+<svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"/>
+</svg><span id="theme-label">Light</span>
+</button>
+</div>
+</div>
+<div class="stats-bar">
+<div class="stats-inner">
+<div class="stat"><span class="stat-num" id="stat-total">0</span><span class="stat-label">Total Items</span></div>
+<div class="stat"><span class="stat-num" id="stat-showing">0</span><span class="stat-label">Families</span></div>
+<div class="stat"><span class="stat-num" id="stat-cats">0</span><span class="stat-label">Categories</span></div>
+<div class="stat" id="stat-icons-wrap" style="display:none"><span class="stat-num" id="stat-icons">0</span><span class="stat-label">With Icons</span></div>
+</div>
+</div>
+<div class="controls">
+<div class="controls-inner">
+<div class="search-wrap">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+</svg>
+<input type="text" id="search" placeholder="Search name, ID, description…">
+</div>
+<select id="filter-upgrade">
+<option value="">All Upgrades</option>
+<option value="Upgradeable">Upgradeable</option>
+<option value="Unlimited">Unlimited</option>
+<option value="Not unlimited/Not Upgradable">Not Upgradable</option>
+</select>
+<select id="filter-duration">
+<option value="">Duration</option>
+<option value="Unlimited">Unlimited</option>
+<option value="Limited">Limited</option>
+</select>
+<select id="sort-by">
+<option value="name-asc">Name (A–Z)</option>
+<option value="name-desc">Name (Z–A)</option>
+<option value="id-asc">ID (Low → High)</option>
+<option value="id-desc">ID (High → Low)</option>
+</select>
+<div class="view-toggle">
+<button class="view-btn active" id="btn-grid" onclick="setView('grid')" title="Grid">⊞</button>
+<button class="view-btn" id="btn-table" onclick="setView('table')" title="Table">☰</button>
+</div>
+<button class="reset-btn" onclick="resetFilters()">↺ Reset</button>
+</div>
+</div>
+<div class="nav-wrap">
+<div class="main-tabs-row">
+<div class="main-tabs-inner">
+<button class="main-tab active" id="tab-characters" onclick="setMainTab('characters')">
+👤 Characters
+</button>
+<button class="main-tab" id="tab-weapons" onclick="setMainTab('weapons')">
+🔫 Weapons
+</button>
+<button class="main-tab" id="tab-other" onclick="setMainTab('other')">
+📦 Other
+</button>
+</div>
+</div>
+<div class="sub-tabs-row" id="sub-tabs-row">
+<div class="sub-tabs-inner" id="cat-strip"></div>
+</div>
+</div>
+<div class="content">
+<div id="items-container"></div>
+</div>
+</div>
 <div class="toast" id="toast"></div>
-
-<script>
-/* ════════════════════════════════════════════════════════════════
-   ★ CONFIG — update these two values when you know them
-════════════════════════════════════════════════════════════════ */
-const CONFIG = {
-  // ── Icons ──────────────────────────────────────────────────────
-  // Set to true once you have converted the .dds spritesheets to PNG.
-  // Everything else is already wired up — just flip this flag.
-  ICONS_ENABLED: true,
-
-  // Extension of your converted spritesheet files (.png or .jpg)
-  ICON_EXT: '.png',
-
-  // Folder containing the spritesheet images (relative to index.html)
-  ICONS_DIR: 'assets/icons/',
-
-  // ── Data files ─────────────────────────────────────────────────
-  // Relative paths — work automatically on GitHub Pages once committed
-  DATA_FILES: {
-    items:   'data/iteminfo.cdb.json',
-    weapons: 'data/itemweaponsinfo.cdb.json',
-    icons:   'data/iconsinfo.cdb.json'   // still loaded so data is ready when icons are enabled
-  }
-
-  /*
-  ── HOW SPRITESHEET ICONS WORK (ready to enable) ──────────────────
-  Each entry in iconsinfo.cdb.json has:
-    ii_id       → matched against item's ii_iconsmall field
-    ii_filename → spritesheet image (e.g. "icon_costume_HAIR_A_01.dds")
-    ii_offset   → index of this icon within the sheet (0-based)
-    ii_width    → icon width  in px (e.g. 102)
-    ii_height   → icon height in px (e.g. 84)
-    ii_filesize → spritesheet width in px (e.g. 512)  ← used to calc columns
-
-  Sprite math:
-    columns = Math.floor(ii_filesize / ii_width)
-    x       = (ii_offset % columns) * ii_width
-    y       = Math.floor(ii_offset / columns) * ii_height
-
-  CSS rendering (applied inline per icon element):
-    background-image:    url('assets/icons/icon_costume_HAIR_A_01.png')
-    background-position: -Xpx -Ypx
-    background-size:     auto   (or explicit sheet width × height)
-    width: ii_width px;  height: ii_height px
-  ─────────────────────────────────────────────────────────────────*/
+<script>const CONFIG = {
+ICONS_ENABLED: true,
+ICON_EXT: '.png',
+ICONS_DIR: 'assets/icons/',
+DATA_FILES: {
+items: 'data/iteminfo.cdb.json',
+weapons: 'data/itemweaponsinfo.cdb.json',
+icons: 'data/iconsinfo.cdb.json'
+}
 };
-
-/* ════════════════════════════════════════════════════════════════
-   CATEGORY CONFIG
-════════════════════════════════════════════════════════════════ */
 const CATEGORIES = {
-  'Pandora':          '#9900FF',
-  'Naomi':            '#FF69B4',
-  'Kai':              '#00CC44',
-  'CHIP':             '#1155CC',
-  'Knox':             '#FF6600',
-  'Simon':            '#334488',
-  'Sophita':          '#CCB800',
-  'Amelia':           '#5aaa5a',
-  'Sharkill':         '#CC2200',
-  'Accessories':      '#00AAAA',
-  'Melee':            '#5aaa70',
-  'Rifle':            '#4a9a60',
-  'Shotgun':          '#3a8a50',
-  'Sniper':           '#2a7a40',
-  'MicroGun':         '#1a6a30',
-  'Bazooka':          '#0a5a20',
-  'Grenade Launcher': '#004a10',
-  'Other Items':      '#607080',
-  'Banned Items':     '#7a1010'
+'Pandora': '#9900FF',
+'Naomi': '#FF69B4',
+'Kai': '#00CC44',
+'CHIP': '#1155CC',
+'Knox': '#FF6600',
+'Simon': '#334488',
+'Sophita': '#CCB800',
+'Amelia': '#5aaa5a',
+'Sharkill': '#CC2200',
+'Accessories': '#00AAAA',
+'Melee': '#5aaa70',
+'Rifle': '#4a9a60',
+'Shotgun': '#3a8a50',
+'Sniper': '#2a7a40',
+'MicroGun': '#1a6a30',
+'Bazooka': '#0a5a20',
+'Grenade Launcher': '#004a10',
+'Other Items': '#607080',
+'Banned Items': '#7a1010'
 };
-
 const UPGRADE_CONFIG = {
-  'Melee':            {'5':'Unlimited - Power',       '6':'Unlimited - Run Speed',   '7':'Unlimited - Range'},
-  'Rifle':            {'5':'Unlimited - Power',       '6':'Unlimited - Accuracy',    '7':'Unlimited - Ammo Capacity'},
-  'Shotgun':          {'5':'Unlimited - Power',       '6':'Unlimited - Firing Rate', '7':'Unlimited - Reload Speed'},
-  'Sniper':           {'5':'Unlimited - Reload Speed','6':'Unlimited - Zoom Speed',  '7':'Unlimited - Power'},
-  'MicroGun':         {'5':'Unlimited - Warm Up Time','6':'Unlimited - Power',       '7':'Unlimited - Run Speed'},
-  'Bazooka':          {'5':'Unlimited - Firing Rate', '6':'Unlimited - Power',       '7':'Unlimited - Projectile Speed'},
-  'Grenade Launcher': {'5':'Unlimited - Blast Radius','6':'Unlimited - Power',       '7':'Unlimited - Firing Rate'}
+'Melee': {'5':'Unlimited - Power', '6':'Unlimited - Run Speed', '7':'Unlimited - Range'},
+'Rifle': {'5':'Unlimited - Power', '6':'Unlimited - Accuracy', '7':'Unlimited - Ammo Capacity'},
+'Shotgun': {'5':'Unlimited - Power', '6':'Unlimited - Firing Rate', '7':'Unlimited - Reload Speed'},
+'Sniper': {'5':'Unlimited - Reload Speed','6':'Unlimited - Zoom Speed', '7':'Unlimited - Power'},
+'MicroGun': {'5':'Unlimited - Warm Up Time','6':'Unlimited - Power', '7':'Unlimited - Run Speed'},
+'Bazooka': {'5':'Unlimited - Firing Rate', '6':'Unlimited - Power', '7':'Unlimited - Projectile Speed'},
+'Grenade Launcher': {'5':'Unlimited - Blast Radius','6':'Unlimited - Power', '7':'Unlimited - Firing Rate'}
 };
-
 const TAB_GROUPS = {
-  characters: ['Pandora','Naomi','Kai','CHIP','Knox','Simon','Sophita','Amelia','Sharkill','Accessories'],
-  weapons:    ['Melee','Rifle','Shotgun','Sniper','MicroGun','Bazooka','Grenade Launcher'],
-  other:      ['Other Items','Banned Items']
+characters: ['Pandora','Naomi','Kai','CHIP','Knox','Simon','Sophita','Amelia','Sharkill','Accessories'],
+weapons: ['Melee','Rifle','Shotgun','Sniper','MicroGun','Bazooka','Grenade Launcher'],
+other: ['Other Items','Banned Items']
 };
-
-/* ════════════════════════════════════════════════════════════════
-   STATE
-════════════════════════════════════════════════════════════════ */
-let allItems       = [];
-let iconData       = {};
-let activeMainTab  = 'characters';
+let allItems = [];
+let iconData = {};
+let activeMainTab = 'characters';
 let activeCategory = 'All';
-let currentView    = 'grid';
-
-/* ════════════════════════════════════════════════════════════════
-   LOADING
-════════════════════════════════════════════════════════════════ */
-function setStep(id, state) { // state: 'active' | 'done'
-  const el = document.getElementById(id);
-  el.classList.remove('active','done');
-  el.classList.add(state);
+let currentView = 'grid';
+function setStep(id, state) {
+const el = document.getElementById(id);
+el.classList.remove('active','done');
+el.classList.add(state);
 }
 function setBar(pct) {
-  document.getElementById('load-bar').style.width = pct + '%';
+document.getElementById('load-bar').style.width = pct + '%';
 }
 function showLoadError(msg) {
-  const e = document.getElementById('load-error');
-  const b = document.getElementById('retry-btn');
-  if (e) {
-    e.innerHTML = '❌ Failed to load data<br><small style="opacity:.8;font-weight:400">' +
-      msg + '</small><br><small style="opacity:.6;font-weight:400;font-size:11px">Check that ' +
-      CONFIG.DATA_FILES.items + ' exists in your repo</small>';
-    e.style.display = 'block';
-  }
-  if (b) b.style.display = 'inline-block';
+const e = document.getElementById('load-error');
+const b = document.getElementById('retry-btn');
+if (e) {
+e.innerHTML = '❌ Failed to load data<br><small style="opacity:.8;font-weight:400">' +
+msg + '</small><br><small style="opacity:.6;font-weight:400;font-size:11px">Check that ' +
+CONFIG.DATA_FILES.items + ' exists in your repo</small>';
+e.style.display = 'block';
 }
-
+if (b) b.style.display = 'inline-block';
+}
 async function loadAllData() {
-  // Reset UI
-  document.getElementById('app').style.display = 'none';
-  const ls = document.getElementById('loading-screen');
-  ls.style.display = 'flex'; ls.classList.remove('fade-out');
-  ['step-items','step-weapons','step-build'].forEach(id => {
-    const el = document.getElementById(id);
-    el.classList.remove('active','done');
-  });
-  document.getElementById('load-error').style.display = 'none';
-  document.getElementById('retry-btn').style.display = 'none';
-  setBar(0);
-
-  try {
-    // ── Fetch iteminfo ──────────────────────────────────────────
-    setStep('step-items','active'); setBar(5);
-    let itemsRaw;
-    try {
-      const r = await fetch(CONFIG.DATA_FILES.items);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      itemsRaw = await r.json();
-    } catch(e) { throw new Error(`iteminfo.cdb.json — ${e.message}`); }
-    setStep('step-items','done'); setBar(40);
-
-    // ── Fetch weaponsinfo ───────────────────────────────────────
-    setStep('step-weapons','active');
-    let weaponsRaw = [];
-    try {
-      const r = await fetch(CONFIG.DATA_FILES.weapons);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      weaponsRaw = await r.json();
-    } catch(e) {
-      console.warn('itemweaponsinfo.cdb.json not loaded:', e.message);
-    }
-    setStep('step-weapons','done'); setBar(72);
-
-    // ── Fetch iconsinfo (always loaded silently; used only when ICONS_ENABLED) ──
-    let iconsRaw = [];
-    try {
-      const r = await fetch(CONFIG.DATA_FILES.icons);
-      if (r.ok) iconsRaw = await r.json();
-    } catch(e) { /* non-fatal */ }
-
-    // ── Build catalog ───────────────────────────────────────────
-    setStep('step-build','active');
-
-    const norm = v => Array.isArray(v) ? v
-                    : (v && Array.isArray(v.items)) ? v.items
-                    : (v ? [v] : []);
-    const itemArr   = norm(itemsRaw);
-    const weaponArr = norm(weaponsRaw);
-    const iconArr   = norm(iconsRaw);
-
-    // Merge items + weapons by ii_id (iteminfo takes precedence on duplicates)
-    const seen   = new Set();
-    const merged = [];
-    for (const item of [...itemArr, ...weaponArr]) {
-      const key = String(item.ii_id ?? '');
-      if (key && !seen.has(key)) { seen.add(key); merged.push(item); }
-    }
-
-    // Build sprite data lookup (ready for when ICONS_ENABLED is flipped to true)
-    iconData = {};
-    for (const ic of iconArr) {
-      if (ic.ii_id == null) continue;
-      const sheetFile = String(ic.ii_filename || '').replace(/\.dds$/i, CONFIG.ICON_EXT);
-      const w    = ic.ii_width    || 102;
-      const h    = ic.ii_height   || 84;
-      const cols = Math.max(1, Math.floor((ic.ii_filesize || 512) / w));
-      const off  = ic.ii_offset   || 0;
-      iconData[String(ic.ii_id)] = {
-        sheet:  CONFIG.ICONS_DIR + sheetFile,
-        x:      (off % cols) * w,
-        y:      Math.floor(off / cols) * h,
-        w, h,
-        sheetW: ic.ii_filesize || 512   // needed for background-size scaling
-      };
-    }
-
-    // Parse all items
-    allItems = merged.map(item => {
-      const s   = v => v != null ? String(v) : '';
-      let category = determineCategory(s(item.ii_meshfilename));
-      const upgrade  = determineUpgrade(item.ii_id, category);
-      const name     = s(item.ii_name);
-
-      // Items with '????' in their name are garbled → always Other Items
-      if (name.includes('????')) category = 'Other Items';
-
-      const iconKey = [item.ii_iconsmall, item.ii_icon, item.ii_id]
-        .filter(v => v != null)
-        .map(String)
-        .find(k => iconData[k]) || null;
-      const sprite = (CONFIG.ICONS_ENABLED && iconKey) ? iconData[iconKey] : null;
-
-      const id = item.ii_id != null ? item.ii_id : '';
-      return {
-        id,
-        rootKey:    Math.floor(Number(id) / 100) * 100,
-        name,
-        duration:   s(item.ii_name_time),
-        upgrade,
-        file:       s(item.ii_meshfilename),
-        desc:       s(item.ii_desc),
-        category,
-        effect:     item.ef_effect_1 != null ? Number(item.ef_effect_1) : 0,
-        nameOption: s(item.ii_name_option),
-        sprite
-      };
-    });
-
-    setStep('step-build','done'); setBar(100);
-
-    document.getElementById('stat-total').textContent = allItems.length.toLocaleString();
-    document.getElementById('stat-cats').textContent  = new Set(allItems.map(i => i.category)).size;
-
-    if (CONFIG.ICONS_ENABLED) {
-      const withIcons = allItems.filter(i => i.sprite).length;
-      document.getElementById('stat-icons').textContent   = withIcons.toLocaleString();
-      document.getElementById('stat-icons-wrap').style.display = '';
-    }
-
-    buildCategoryStrip();
-    resetFilters();
-
-    setTimeout(() => {
-      ls.classList.add('fade-out');
-      document.getElementById('app').style.display = 'block';
-      setTimeout(() => { ls.style.display = 'none'; }, 420);
-    }, 300);
-
-  } catch(err) {
-    showLoadError(err.message);
-  }
+document.getElementById('app').style.display = 'none';
+const ls = document.getElementById('loading-screen');
+ls.style.display = 'flex'; ls.classList.remove('fade-out');
+['step-items','step-weapons','step-build'].forEach(id => {
+const el = document.getElementById(id);
+el.classList.remove('active','done');
+});
+document.getElementById('load-error').style.display = 'none';
+document.getElementById('retry-btn').style.display = 'none';
+setBar(0);
+try {
+setStep('step-items','active'); setBar(5);
+let itemsRaw;
+try {
+const r = await fetch(CONFIG.DATA_FILES.items);
+if (!r.ok) throw new Error(`HTTP ${r.status}`);
+itemsRaw = await r.json();
+} catch(e) { throw new Error(`iteminfo.cdb.json — ${e.message}`); }
+setStep('step-items','done'); setBar(40);
+setStep('step-weapons','active');
+let weaponsRaw = [];
+try {
+const r = await fetch(CONFIG.DATA_FILES.weapons);
+if (!r.ok) throw new Error(`HTTP ${r.status}`);
+weaponsRaw = await r.json();
+} catch(e) {
+console.warn('itemweaponsinfo.cdb.json not loaded:', e.message);
 }
-
-/* ════════════════════════════════════════════════════════════════
-   CATEGORISATION (mirrors Google Sheets script exactly)
-════════════════════════════════════════════════════════════════ */
-function determineCategory(filename) {
-  if (!filename || !filename.trim()) return 'Other Items';
-  const lower    = filename.toLowerCase().trim().replace(/\\/g, '/');
-  const segments = lower.split('/');
-  const folder   = segments[0];
-
-  const folderIs = kw => folder === kw || folder.startsWith(kw + '_');
-  const fullHas  = kw => lower.includes(kw);
-
-  // Accessories checked first — nested inside character folders
-  const isAcc = folder.startsWith('acc') ||
-                segments.some(s => s === 'acc');
-  if (isAcc) return 'Accessories';
-
-  if (folderIs('gothloli') || fullHas('gothloli')) return 'Pandora';
-  if (folderIs('girl')     || fullHas('girl'))     return 'Naomi';
-  if (folderIs('elf')      || fullHas('elf'))       return 'Amelia';
-  if (folderIs('sophitia') || fullHas('sophitia')) return 'Sophita';
-  if (folderIs('sophita')  || fullHas('sophita'))  return 'Sophita';
-  if (folderIs('sharkill') || fullHas('sharkill')) return 'Sharkill';
-  if (folderIs('simon')    || fullHas('simon'))    return 'Simon';
-  if (folderIs('monster')  || fullHas('monster'))  return 'CHIP';
-  if (folderIs('mechanic') || fullHas('mechanic')) return 'Knox';
-  if (folderIs('guy'))                             return 'Kai';
-  if (folderIs('sword')    || fullHas('sword'))    return 'Melee';
-  if (folderIs('rifle')    || fullHas('rifle'))    return 'Rifle';
-  if (folderIs('shotgun')  || fullHas('shotgun'))  return 'Shotgun';
-  if (folderIs('sniper')   || fullHas('sniper'))   return 'Sniper';
-  if (folderIs('gatling')  || fullHas('gatling'))  return 'MicroGun';
-  if (folderIs('launcher') || fullHas('launcher')) return 'Bazooka';
-  if (folderIs('grenade')  || fullHas('grenade'))  return 'Grenade Launcher';
-  return 'Other Items';
+setStep('step-weapons','done'); setBar(72);
+let iconsRaw = [];
+try {
+const r = await fetch(CONFIG.DATA_FILES.icons);
+if (r.ok) iconsRaw = await r.json();
+} catch(e) { }
+setStep('step-build','active');
+const norm = v => Array.isArray(v) ? v
+: (v && Array.isArray(v.items)) ? v.items
+: (v ? [v] : []);
+const itemArr = norm(itemsRaw);
+const weaponArr = norm(weaponsRaw);
+const iconArr = norm(iconsRaw);
+const seen = new Set();
+const merged = [];
+for (const item of [...itemArr, ...weaponArr]) {
+const key = String(item.ii_id ?? '');
+if (key && !seen.has(key)) { seen.add(key); merged.push(item); }
 }
-
-function determineUpgrade(itemId, category) {
-  const idStr = String(itemId ?? '');
-  if (idStr.length >= 2) {
-    const lastTwo = parseInt(idStr.slice(-2), 10);
-    if (lastTwo >= 50 && lastTwo <= 59) return 'Upgradeable';
-  }
-  const ups = UPGRADE_CONFIG[category];
-  if (ups) { const m = ups[idStr.slice(-1)]; if (m) return m; }
-  return 'Not unlimited/Not Upgradable';
-}
-
-/* ════════════════════════════════════════════════════════════════
-   MAIN TABS + CATEGORY STRIP
-════════════════════════════════════════════════════════════════ */
-function setMainTab(tab) {
-  activeMainTab  = tab;
-  activeCategory = 'All';
-  document.querySelectorAll('.main-tab').forEach(b =>
-    b.classList.toggle('active', b.id === 'tab-' + tab));
-  buildCategoryStrip();
-  render();
-}
-
-function buildCategoryStrip() {
-  const tabCats  = TAB_GROUPS[activeMainTab] || [];
-  const counts   = {};
-  allItems.forEach(i => { counts[i.category] = (counts[i.category] || 0) + 1; });
-  const tabTotal = allItems.filter(i => tabCats.includes(i.category)).length;
-
-  const strip = document.getElementById('cat-strip');
-  let html = `<button class="sub-tab active" data-cat="All"
-    onclick="setCategory('All')" style="--cat-color:var(--accent2)">
-    <span class="sub-tab-dot" style="background:var(--accent2)"></span>
-    All
-    <span class="sub-tab-count">(${tabTotal.toLocaleString()})</span>
-  </button>`;
-
-  tabCats.forEach(name => {
-    if (!counts[name]) return;
-    const color = CATEGORIES[name] || '#607080';
-    html += `<button class="sub-tab" data-cat="${name}"
-      onclick="setCategory('${esc(name)}')" style="--cat-color:${color}">
-      <span class="sub-tab-dot" style="background:${color}"></span>
-      ${esc(name)}
-      <span class="sub-tab-count">(${counts[name].toLocaleString()})</span>
-    </button>`;
-  });
-  strip.innerHTML = html;
-}
-
-function setCategory(cat) {
-  activeCategory = cat;
-  document.querySelectorAll('.sub-tab').forEach(b =>
-    b.classList.toggle('active', b.dataset.cat === cat));
-  render();
-}
-
-/* ════════════════════════════════════════════════════════════════
-   FAMILY ROOT GROUPING
-   rootKey = floor(id / 100) * 100  (works for both weapons & parts)
-   One card per family; variants drawer shows all members.
-════════════════════════════════════════════════════════════════ */
-let familyGroups = [];
-
-function groupByFamilyRoot(items) {
-  const map = new Map();
-  for (const item of items) {
-    const key = item.rootKey;
-    if (!map.has(key)) {
-      map.set(key, { rootKey: key, name: '', desc: '', category: item.category, sprite: null, variants: [] });
-    }
-    const g = map.get(key);
-    if (Number(item.id) === key) { g.name = item.name; g.desc = item.desc; g.sprite = item.sprite; }
-    // Fallback: first sprite we encounter for this family
-    if (!g.sprite && item.sprite) g.sprite = item.sprite;
-    g.variants.push({ id: item.id, duration: item.duration, upgrade: item.upgrade, name: item.name, category: item.category, effect: item.effect || 0, nameOption: item.nameOption || '' });
-  }
-  for (const g of map.values()) {
-    if (!g.name) { g.name = g.variants[0].name; g.desc = g.variants[0].desc || ''; }
-    g.variants.sort((a, b) => Number(a.id) - Number(b.id));
-  }
-  return [...map.values()];
-}
-
-/* ════════════════════════════════════════════════════════════════
-   FILTERS + SORT
-════════════════════════════════════════════════════════════════ */
-function getFiltered() {
-  const q   = document.getElementById('search').value.toLowerCase().trim();
-  const upg = document.getElementById('filter-upgrade').value;
-  const dur = document.getElementById('filter-duration').value;
-  const srt = document.getElementById('sort-by').value;
-
-  let items = allItems;
-  const tabCats = TAB_GROUPS[activeMainTab] || [];
-  items = items.filter(i => tabCats.includes(i.category));
-  if (activeCategory !== 'All') items = items.filter(i => i.category === activeCategory);
-  if (q) items = items.filter(i =>
-    i.name.toLowerCase().includes(q) ||
-    String(i.id).includes(q) ||
-    i.desc.toLowerCase().includes(q) ||
-    i.file.toLowerCase().includes(q)
-  );
-  if (upg) {
-    if (upg === 'Unlimited') items = items.filter(i => i.upgrade.startsWith('Unlimited'));
-    else                     items = items.filter(i => i.upgrade === upg);
-  }
-  if (dur) {
-    if (dur === 'Unlimited') items = items.filter(i => i.duration === 'Unlimited');
-    else                     items = items.filter(i => i.duration !== 'Unlimited' && i.duration !== '');
-  }
-  return [...items].sort((a, b) => {
-    switch(srt) {
-      case 'name-asc':  return a.name.localeCompare(b.name);
-      case 'name-desc': return b.name.localeCompare(a.name);
-      case 'id-asc':    return Number(a.id) - Number(b.id);
-      case 'id-desc':   return Number(b.id) - Number(a.id);
-    }
-    return 0;
-  });
-}
-
-function resetFilters() {
-  document.getElementById('search').value = '';
-  document.getElementById('filter-upgrade').value = '';
-  document.getElementById('filter-duration').value = '';
-  document.getElementById('sort-by').value = 'name-asc';
-  activeMainTab  = 'characters';
-  activeCategory = 'All';
-  document.querySelectorAll('.main-tab').forEach(b =>
-    b.classList.toggle('active', b.id === 'tab-characters'));
-  buildCategoryStrip();
-  render();
-}
-
-/* ════════════════════════════════════════════════════════════════
-   RENDER
-════════════════════════════════════════════════════════════════ */
-function render() {
-  const items  = getFiltered();
-  const groups = groupByFamilyRoot(items);
-  familyGroups = groups;
-
-  const cont = document.getElementById('items-container');
-  document.getElementById('stat-showing').textContent = groups.length.toLocaleString();
-
-  if (!groups.length) {
-    cont.innerHTML = `<div class="empty">
-      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <p>No items match your filters.</p></div>`;
-    return;
-  }
-  currentView === 'grid' ? renderGrid(groups, cont) : renderTable(groups, cont);
-}
-
-/* ════════════════════════════════════════════════════════════════
-   ICON HTML
-════════════════════════════════════════════════════════════════ */
-function iconHtml(item, size) {
-  if (CONFIG.ICONS_ENABLED && item.sprite) {
-    const sp    = item.sprite;
-    const dim   = size === 'card' ? 96 : size === 'chip' ? 28 : 30;
-    const scale = dim / Math.max(sp.w, sp.h);
-    const sw    = Math.round(sp.w * scale);
-    const sh    = Math.round(sp.h * scale);
-    const bx    = -Math.round(sp.x * scale);
-    const by    = -Math.round(sp.y * scale);
-    const bsW   = Math.round(sp.sheetW * scale);
-    const style = [
-      `width:${sw}px`,`height:${sh}px`,
-      `background-image:url('${sp.sheet}')`,
-      `background-position:${bx}px ${by}px`,
-      `background-size:${bsW}px auto`,
-      `image-rendering:pixelated`,
-      `display:inline-block`,`flex-shrink:0`
-    ].join(';');
-    return `<span class="${size==='card'?'card-icon':''}" style="${style}" title="${esc(item.name)}"></span>`;
-  }
-  const color = CATEGORIES[item.category] || '#607080';
-  const dim   = size === 'card' ? 80 : size === 'chip' ? 28 : 26;
-  const fs    = size === 'card' ? 32 : size === 'chip' ? 14 : 13;
-  const style = [
-    `width:${dim}px`,`height:${dim}px`,
-    `border-radius:${size==='card'?8:5}px`,
-    `background:${color}22`,`border:1px solid ${color}55`,
-    `display:flex`,`align-items:center`,`justify-content:center`,
-    `font-size:${fs}px`,`color:${color}`,`flex-shrink:0`
-  ].join(';');
-  return `<span style="${style}">${(item.name||'?')[0].toUpperCase()}</span>`;
-}
-
-function upgClass(u) {
-  if (u === 'Not unlimited/Not Upgradable') return 'badge-up-no';
-  if (u === 'Upgradeable')                  return 'badge-up-able';
-  return 'badge-up-yes';
-}
-
-/* ════════════════════════════════════════════════════════════════
-   GRID — batched paint
-════════════════════════════════════════════════════════════════ */
-const BATCH = 200;
-
-function renderGrid(groups, cont) {
-  const wrap = document.createElement('div');
-  wrap.className = 'grid-view';
-  cont.innerHTML = '';
-  cont.appendChild(wrap);
-  let idx = 0;
-  function paint() {
-    const end  = Math.min(idx + BATCH, groups.length);
-    const frag = document.createDocumentFragment();
-    const tmp  = document.createElement('div');
-    let html   = '';
-    for (let i = idx; i < end; i++) html += gridCard(groups[i], i);
-    tmp.innerHTML = html;
-    while (tmp.firstChild) frag.appendChild(tmp.firstChild);
-    wrap.appendChild(frag);
-    idx = end;
-    if (idx < groups.length) requestAnimationFrame(paint);
-  }
-  paint();
-}
-
-const WEAPON_CATS = new Set(['Melee','Rifle','Shotgun','Sniper','MicroGun','Bazooka','Grenade Launcher']);
-
-const CHAR_UPGRADE_MAP = {
-  '0': 'Unlimited - Run Speed',
-  '1': 'Unlimited - Health',
-  '2': 'Unlimited - Run Speed',
-  '3': 'Unlimited - Health'
+iconData = {};
+for (const ic of iconArr) {
+if (ic.ii_id == null) continue;
+const sheetFile = String(ic.ii_filename || '').replace(/\.dds$/i, CONFIG.ICON_EXT);
+const w = ic.ii_width || 102;
+const h = ic.ii_height || 84;
+const cols = Math.max(1, Math.floor((ic.ii_filesize || 512) / w));
+const off = ic.ii_offset || 0;
+iconData[String(ic.ii_id)] = {
+sheet: CONFIG.ICONS_DIR + sheetFile,
+x: (off % cols) * w,
+y: Math.floor(off / cols) * h,
+w, h,
+sheetW: ic.ii_filesize || 512
 };
-
-// ef_effect_1 lookup tables (per spec)
+}
+allItems = merged.map(item => {
+const s = v => v != null ? String(v) : '';
+let category = determineCategory(s(item.ii_meshfilename));
+const upgrade = determineUpgrade(item.ii_id, category);
+const name = s(item.ii_name);
+if (name.includes('????')) category = 'Other Items';
+const iconKey = [item.ii_iconsmall, item.ii_icon, item.ii_id]
+.filter(v => v != null)
+.map(String)
+.find(k => iconData[k]) || null;
+const sprite = (CONFIG.ICONS_ENABLED && iconKey) ? iconData[iconKey] : null;
+const id = item.ii_id != null ? item.ii_id : '';
+return {
+id,
+rootKey: Math.floor(Number(id) / 100) * 100,
+name,
+duration: s(item.ii_name_time),
+upgrade,
+file: s(item.ii_meshfilename),
+desc: s(item.ii_desc),
+category,
+effect: item.ef_effect_1 != null ? Number(item.ef_effect_1) : 0,
+nameOption: s(item.ii_name_option),
+sprite
+};
+});
+setStep('step-build','done'); setBar(100);
+document.getElementById('stat-total').textContent = allItems.length.toLocaleString();
+document.getElementById('stat-cats').textContent = new Set(allItems.map(i => i.category)).size;
+if (CONFIG.ICONS_ENABLED) {
+const withIcons = allItems.filter(i => i.sprite).length;
+document.getElementById('stat-icons').textContent = withIcons.toLocaleString();
+document.getElementById('stat-icons-wrap').style.display = '';
+}
+buildCategoryStrip();
+resetFilters();
+setTimeout(() => {
+ls.classList.add('fade-out');
+document.getElementById('app').style.display = 'block';
+setTimeout(() => { ls.style.display = 'none'; }, 420);
+}, 300);
+} catch(err) {
+showLoadError(err.message);
+}
+}
+function determineCategory(filename) {
+if (!filename || !filename.trim()) return 'Other Items';
+const lower = filename.toLowerCase().trim().replace(/\\/g, '/');
+const segments = lower.split('/');
+const folder = segments[0];
+const folderIs = kw => folder === kw || folder.startsWith(kw + '_');
+const fullHas = kw => lower.includes(kw);
+const isAcc = folder.startsWith('acc') ||
+segments.some(s => s === 'acc');
+if (isAcc) return 'Accessories';
+if (folderIs('gothloli') || fullHas('gothloli')) return 'Pandora';
+if (folderIs('girl') || fullHas('girl')) return 'Naomi';
+if (folderIs('elf') || fullHas('elf')) return 'Amelia';
+if (folderIs('sophitia') || fullHas('sophitia')) return 'Sophita';
+if (folderIs('sophita') || fullHas('sophita')) return 'Sophita';
+if (folderIs('sharkill') || fullHas('sharkill')) return 'Sharkill';
+if (folderIs('simon') || fullHas('simon')) return 'Simon';
+if (folderIs('monster') || fullHas('monster')) return 'CHIP';
+if (folderIs('mechanic') || fullHas('mechanic')) return 'Knox';
+if (folderIs('guy')) return 'Kai';
+if (folderIs('sword') || fullHas('sword')) return 'Melee';
+if (folderIs('rifle') || fullHas('rifle')) return 'Rifle';
+if (folderIs('shotgun') || fullHas('shotgun')) return 'Shotgun';
+if (folderIs('sniper') || fullHas('sniper')) return 'Sniper';
+if (folderIs('gatling') || fullHas('gatling')) return 'MicroGun';
+if (folderIs('launcher') || fullHas('launcher')) return 'Bazooka';
+if (folderIs('grenade') || fullHas('grenade')) return 'Grenade Launcher';
+return 'Other Items';
+}
+function determineUpgrade(itemId, category) {
+const idStr = String(itemId ?? '');
+if (idStr.length >= 2) {
+const lastTwo = parseInt(idStr.slice(-2), 10);
+if (lastTwo >= 50 && lastTwo <= 59) return 'Upgradeable';
+}
+const ups = UPGRADE_CONFIG[category];
+if (ups) { const m = ups[idStr.slice(-1)]; if (m) return m; }
+return 'Not unlimited/Not Upgradable';
+}
+function setMainTab(tab) {
+activeMainTab = tab;
+activeCategory = 'All';
+document.querySelectorAll('.main-tab').forEach(b =>
+b.classList.toggle('active', b.id === 'tab-' + tab));
+buildCategoryStrip();
+render();
+}
+function buildCategoryStrip() {
+const tabCats = TAB_GROUPS[activeMainTab] || [];
+const counts = {};
+allItems.forEach(i => { counts[i.category] = (counts[i.category] || 0) + 1; });
+const tabTotal = allItems.filter(i => tabCats.includes(i.category)).length;
+const strip = document.getElementById('cat-strip');
+let html = `<button class="sub-tab active" data-cat="All"
+onclick="setCategory('All')" style="--cat-color:var(--accent2)">
+<span class="sub-tab-dot" style="background:var(--accent2)"></span>
+All
+<span class="sub-tab-count">(${tabTotal.toLocaleString()})</span>
+</button>`;
+tabCats.forEach(name => {
+if (!counts[name]) return;
+const color = CATEGORIES[name] || '#607080';
+html += `<button class="sub-tab" data-cat="${name}"
+onclick="setCategory('${esc(name)}')" style="--cat-color:${color}">
+<span class="sub-tab-dot" style="background:${color}"></span>
+${esc(name)}
+<span class="sub-tab-count">(${counts[name].toLocaleString()})</span>
+</button>`;
+});
+strip.innerHTML = html;
+}
+function setCategory(cat) {
+activeCategory = cat;
+document.querySelectorAll('.sub-tab').forEach(b =>
+b.classList.toggle('active', b.dataset.cat === cat));
+render();
+}
+let familyGroups = [];
+function groupByFamilyRoot(items) {
+const map = new Map();
+for (const item of items) {
+const key = item.rootKey;
+if (!map.has(key)) {
+map.set(key, { rootKey: key, name: '', desc: '', category: item.category, sprite: null, variants: [] });
+}
+const g = map.get(key);
+if (Number(item.id) === key) { g.name = item.name; g.desc = item.desc; g.sprite = item.sprite; }
+if (!g.sprite && item.sprite) g.sprite = item.sprite;
+g.variants.push({ id: item.id, duration: item.duration, upgrade: item.upgrade, name: item.name, category: item.category, effect: item.effect || 0, nameOption: item.nameOption || '' });
+}
+for (const g of map.values()) {
+if (!g.name) { g.name = g.variants[0].name; g.desc = g.variants[0].desc || ''; }
+g.variants.sort((a, b) => Number(a.id) - Number(b.id));
+}
+return [...map.values()];
+}
+function getFiltered() {
+const q = document.getElementById('search').value.toLowerCase().trim();
+const upg = document.getElementById('filter-upgrade').value;
+const dur = document.getElementById('filter-duration').value;
+const srt = document.getElementById('sort-by').value;
+let items = allItems;
+const tabCats = TAB_GROUPS[activeMainTab] || [];
+items = items.filter(i => tabCats.includes(i.category));
+if (activeCategory !== 'All') items = items.filter(i => i.category === activeCategory);
+if (q) items = items.filter(i =>
+i.name.toLowerCase().includes(q) ||
+String(i.id).includes(q) ||
+i.desc.toLowerCase().includes(q) ||
+i.file.toLowerCase().includes(q)
+);
+if (upg) {
+if (upg === 'Unlimited') items = items.filter(i => i.upgrade.startsWith('Unlimited'));
+else items = items.filter(i => i.upgrade === upg);
+}
+if (dur) {
+if (dur === 'Unlimited') items = items.filter(i => i.duration === 'Unlimited');
+else items = items.filter(i => i.duration !== 'Unlimited' && i.duration !== '');
+}
+return [...items].sort((a, b) => {
+switch(srt) {
+case 'name-asc': return a.name.localeCompare(b.name);
+case 'name-desc': return b.name.localeCompare(a.name);
+case 'id-asc': return Number(a.id) - Number(b.id);
+case 'id-desc': return Number(b.id) - Number(a.id);
+}
+return 0;
+});
+}
+function resetFilters() {
+document.getElementById('search').value = '';
+document.getElementById('filter-upgrade').value = '';
+document.getElementById('filter-duration').value = '';
+document.getElementById('sort-by').value = 'name-asc';
+activeMainTab = 'characters';
+activeCategory = 'All';
+document.querySelectorAll('.main-tab').forEach(b =>
+b.classList.toggle('active', b.id === 'tab-characters'));
+buildCategoryStrip();
+render();
+}
+function render() {
+const items = getFiltered();
+const groups = groupByFamilyRoot(items);
+familyGroups = groups;
+const cont = document.getElementById('items-container');
+document.getElementById('stat-showing').textContent = groups.length.toLocaleString();
+if (!groups.length) {
+cont.innerHTML = `<div class="empty">
+<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+</svg>
+<p>No items match your filters.</p></div>`;
+return;
+}
+currentView === 'grid' ? renderGrid(groups, cont) : renderTable(groups, cont);
+}
+function iconHtml(item, size) {
+if (CONFIG.ICONS_ENABLED && item.sprite) {
+const sp = item.sprite;
+const dim = size === 'card' ? 96 : size === 'chip' ? 28 : 30;
+const scale = dim / Math.max(sp.w, sp.h);
+const sw = Math.round(sp.w * scale);
+const sh = Math.round(sp.h * scale);
+const bx = -Math.round(sp.x * scale);
+const by = -Math.round(sp.y * scale);
+const bsW = Math.round(sp.sheetW * scale);
+const style = [
+`width:${sw}px`,`height:${sh}px`,
+`background-image:url('${sp.sheet}')`,
+`background-position:${bx}px ${by}px`,
+`background-size:${bsW}px auto`,
+`image-rendering:pixelated`,
+`display:inline-block`,`flex-shrink:0`
+].join(';');
+return `<span class="${size==='card'?'card-icon':''}" style="${style}" title="${esc(item.name)}"></span>`;
+}
+const color = CATEGORIES[item.category] || '#607080';
+const dim = size === 'card' ? 80 : size === 'chip' ? 28 : 26;
+const fs = size === 'card' ? 32 : size === 'chip' ? 14 : 13;
+const style = [
+`width:${dim}px`,`height:${dim}px`,
+`border-radius:${size==='card'?8:5}px`,
+`background:${color}22`,`border:1px solid ${color}55`,
+`display:flex`,`align-items:center`,`justify-content:center`,
+`font-size:${fs}px`,`color:${color}`,`flex-shrink:0`
+].join(';');
+return `<span style="${style}">${(item.name||'?')[0].toUpperCase()}</span>`;
+}
+function upgClass(u) {
+if (u === 'Not unlimited/Not Upgradable') return 'badge-up-no';
+if (u === 'Upgradeable') return 'badge-up-able';
+return 'badge-up-yes';
+}
+const BATCH = 200;
+function renderGrid(groups, cont) {
+const wrap = document.createElement('div');
+wrap.className = 'grid-view';
+cont.innerHTML = '';
+cont.appendChild(wrap);
+let idx = 0;
+function paint() {
+const end = Math.min(idx + BATCH, groups.length);
+const frag = document.createDocumentFragment();
+const tmp = document.createElement('div');
+let html = '';
+for (let i = idx; i < end; i++) html += gridCard(groups[i], i);
+tmp.innerHTML = html;
+while (tmp.firstChild) frag.appendChild(tmp.firstChild);
+wrap.appendChild(frag);
+idx = end;
+if (idx < groups.length) requestAnimationFrame(paint);
+}
+paint();
+}
+const WEAPON_CATS = new Set(['Melee','Rifle','Shotgun','Sniper','MicroGun','Bazooka','Grenade Launcher']);
+const CHAR_UPGRADE_MAP = {
+'0': 'Unlimited - Run Speed',
+'1': 'Unlimited - Health',
+'2': 'Unlimited - Run Speed',
+'3': 'Unlimited - Health'
+};
 const SPEED_EFFECTS = new Set([20305, 20505, 20720, 20920, 21310, 21110]);
-const HP_EFFECTS    = new Set([32140, 32340, 32616, 32816, 33180, 32980]);
-const AMMO_EFFECTS  = new Map([
-  [40306, 'Sniper'], [40209, 'Shotgun'], [40509, 'Bazooka'],
-  [40406, 'MicroGun'], [40106, 'Rifle'], [40609, 'Grenade Launcher']
+const HP_EFFECTS = new Set([32140, 32340, 32616, 32816, 33180, 32980]);
+const AMMO_EFFECTS = new Map([
+[40306, 'Sniper'], [40209, 'Shotgun'], [40509, 'Bazooka'],
+[40406, 'MicroGun'], [40106, 'Rifle'], [40609, 'Grenade Launcher']
 ]);
-
 function statTypeOf(effect, nameOption) {
-  // Rule 1 — ef_effect_1 is authoritative
-  if (SPEED_EFFECTS.has(effect)) return 'speed';
-  if (HP_EFFECTS.has(effect))    return 'hp';
-  const ammo = AMMO_EFFECTS.get(effect);
-  if (ammo) return 'ammo:' + ammo;
-
-  // Rule 3 — explicit "No Option" = no stat
-  if (effect === 0 && (nameOption || '').trim() === 'No Option') return null;
-
-  // Rule 2 — fallback to ii_name_option text
-  const norm = (nameOption || '').toLowerCase().replace(/\s/g, '');
-  if (norm.includes('runspeed')) return 'speed';
-  if (norm.includes('hp'))       return 'hp';
-  return null;
+if (SPEED_EFFECTS.has(effect)) return 'speed';
+if (HP_EFFECTS.has(effect)) return 'hp';
+const ammo = AMMO_EFFECTS.get(effect);
+if (ammo) return 'ammo:' + ammo;
+if (effect === 0 && (nameOption || '').trim() === 'No Option') return null;
+const norm = (nameOption || '').toLowerCase().replace(/\s/g, '');
+if (norm.includes('runspeed')) return 'speed';
+if (norm.includes('hp')) return 'hp';
+return null;
 }
-
 function variantLabel(v) {
-  const idStr       = String(v.id);
-  const lastOne     = idStr.slice(-1);
-  const isUnlimited = (v.duration || '').toLowerCase().includes('unlimited');
-  const dur         = v.duration || 'Permanent';
-  const isWeapon    = WEAPON_CATS.has(v.category);
-  const isAcc       = v.category === 'Accessories';
-
-  if (isWeapon) {
-    if (isUnlimited) {
-      const ups = UPGRADE_CONFIG[v.category];
-      if (ups && ups[lastOne]) return ups[lastOne];
-    }
-    return dur;
-  }
-
-  if (isAcc) {
-    const st = statTypeOf(v.effect || 0, v.nameOption || '');
-    if (st && st.startsWith('ammo:')) return `${dur} — ${st.slice(5)} Ammo`;
-    if (st === 'speed') return `${dur} — Run Speed`;
-    if (st === 'hp')    return `${dur} — HP`;
-    return dur;
-  }
-
-  // Characters / clothing — CHAR_UPGRADE_MAP (last digit) takes priority for unlimited
-  if (isUnlimited && CHAR_UPGRADE_MAP[lastOne]) return CHAR_UPGRADE_MAP[lastOne];
-
-  // Parts fallback — use ef_effect if available
-  const st = statTypeOf(v.effect || 0, v.nameOption || '');
-  if (st === 'speed') return `${dur} — Run Speed`;
-  if (st === 'hp')    return `${dur} — HP`;
-  return dur;
+const idStr = String(v.id);
+const lastOne = idStr.slice(-1);
+const isUnlimited = (v.duration || '').toLowerCase().includes('unlimited');
+const dur = v.duration || 'Permanent';
+const isWeapon = WEAPON_CATS.has(v.category);
+const isAcc = v.category === 'Accessories';
+if (isWeapon) {
+if (isUnlimited) {
+const ups = UPGRADE_CONFIG[v.category];
+if (ups && ups[lastOne]) return ups[lastOne];
 }
-
-/* Collapse variants that share the same label into one visible row.
-   Extras are hidden behind a "+N more" toggle on that row.        */
+return dur;
+}
+if (isAcc) {
+const st = statTypeOf(v.effect || 0, v.nameOption || '');
+if (st && st.startsWith('ammo:')) return `${dur} — ${st.slice(5)} Ammo`;
+if (st === 'speed') return `${dur} — Run Speed`;
+if (st === 'hp') return `${dur} — HP`;
+return dur;
+}
+if (isUnlimited && CHAR_UPGRADE_MAP[lastOne]) return CHAR_UPGRADE_MAP[lastOne];
+const st = statTypeOf(v.effect || 0, v.nameOption || '');
+if (st === 'speed') return `${dur} — Run Speed`;
+if (st === 'hp') return `${dur} — HP`;
+return dur;
+}
 function dedupeVariants(variants) {
-  const map = new Map();
-  for (const v of variants) {
-    const lbl = variantLabel(v);
-    if (!map.has(lbl)) {
-      map.set(lbl, { label: lbl, primary: v, extras: [] });
-    } else {
-      map.get(lbl).extras.push(v);
-    }
-  }
-  return [...map.values()];
+const map = new Map();
+for (const v of variants) {
+const lbl = variantLabel(v);
+if (!map.has(lbl)) {
+map.set(lbl, { label: lbl, primary: v, extras: [] });
+} else {
+map.get(lbl).extras.push(v);
 }
-
+}
+return [...map.values()];
+}
 function buildVariantChips(group, deduped, color) {
-  return deduped.map(dg => {
-    const vid = String(dg.primary.id);
-    const lbl = dg.label;
-    const dup = dg.extras.length > 0
-      ? `<span class="chip-dup">+${dg.extras.length}</span>` : '';
-    return `<div class="vc-chip" style="--cat-color:${color}" onclick="copyId('${vid}');event.stopPropagation()" title="${esc(lbl)} — click to copy ID">` +
-      iconHtml(group, 'chip') +
-      `<div class="chip-info">` +
-        `<span class="chip-label">${esc(lbl)}</span>` +
-        `<span class="chip-id">${esc(vid)}</span>` +
-        dup +
-      `</div></div>`;
-  }).join('');
+return deduped.map(dg => {
+const vid = String(dg.primary.id);
+const lbl = dg.label;
+const dup = dg.extras.length > 0
+? `<span class="chip-dup">+${dg.extras.length}</span>` : '';
+return `<div class="vc-chip" style="--cat-color:${color}" onclick="copyId('${vid}');event.stopPropagation()" title="${esc(lbl)} — click to copy ID">` +
+iconHtml(group, 'chip') +
+`<div class="chip-info">` +
+`<span class="chip-label">${esc(lbl)}</span>` +
+`<span class="chip-id">${esc(vid)}</span>` +
+dup +
+`</div></div>`;
+}).join('');
 }
-
 function gridCard(group, gid) {
-  const color   = CATEGORIES[group.category] || '#607080';
-  const rootId  = String(group.rootKey);
-  const deduped = dedupeVariants(group.variants);
-  const uCount  = deduped.length;
-  const chipsHtml = uCount > 1 ? buildVariantChips(group, deduped, color) : '';
-
-  return `<div class="item-card" data-gid="${gid}" style="--cat-color:${color}">` +
-    `<div class="card-top-bar"></div>` +
-    `<div class="card-icon-wrap">${iconHtml(group,'card')}</div>` +
-    `<div class="card-body">` +
-      `<div class="card-name">${esc(group.name)||'(no name)'}</div>` +
-      (group.desc ? `<div class="card-desc">${esc(group.desc)}</div>` : '') +
-      `<div class="card-footer-row">` +
-        `<div class="card-id-box" onclick="copyId('${rootId}')" title="Click to copy root ID">${esc(rootId)}</div>` +
-      `</div>` +
-      `<div class="card-badges">` +
-        `<span class="badge badge-cat" style="--cat-color:${color}">${esc(group.category)}</span>` +
-      `</div>` +
-      (uCount > 1 ?
-        `<button class="variants-toggle" data-gid="${gid}" data-open="0" onclick="toggleVariants('${gid}',this);event.stopPropagation()">` +
-        `&#9662; Show ${uCount} variants</button>` +
-        `<div class="variants-grid-drawer" id="vgd-${gid}">${chipsHtml}</div>`
-      : '') +
-    `</div>` +
-  `</div>`;
+const color = CATEGORIES[group.category] || '#607080';
+const rootId = String(group.rootKey);
+const deduped = dedupeVariants(group.variants);
+const uCount = deduped.length;
+const chipsHtml = uCount > 1 ? buildVariantChips(group, deduped, color) : '';
+return `<div class="item-card" data-gid="${gid}" style="--cat-color:${color}">` +
+`<div class="card-top-bar"></div>` +
+`<div class="card-icon-wrap">${iconHtml(group,'card')}</div>` +
+`<div class="card-body">` +
+`<div class="card-name">${esc(group.name)||'(no name)'}</div>` +
+(group.desc ? `<div class="card-desc">${esc(group.desc)}</div>` : '') +
+`<div class="card-footer-row">` +
+`<div class="card-id-box" onclick="copyId('${rootId}')" title="Click to copy root ID">${esc(rootId)}</div>` +
+`</div>` +
+`<div class="card-badges">` +
+`<span class="badge badge-cat" style="--cat-color:${color}">${esc(group.category)}</span>` +
+`</div>` +
+(uCount > 1 ?
+`<button class="variants-toggle" data-gid="${gid}" data-open="0" onclick="toggleVariants('${gid}',this);event.stopPropagation()">` +
+`&#9662; Show ${uCount} variants</button>` +
+`<div class="variants-grid-drawer" id="vgd-${gid}">${chipsHtml}</div>`
+: '') +
+`</div>` +
+`</div>`;
 }
-
 function toggleVariants(gid, btn) {
-  const isOpen = btn.dataset.open === '1';
-  const drawer = document.getElementById('vgd-' + gid);
-  if (!drawer) return;
-  const uCount = dedupeVariants(familyGroups[gid].variants).length;
-  if (isOpen) {
-    btn.dataset.open = '0';
-    drawer.classList.remove('open');
-    btn.innerHTML = `&#9662; Show ${uCount} variants`;
-  } else {
-    btn.dataset.open = '1';
-    drawer.classList.add('open');
-    btn.innerHTML = `&#9652; Hide ${uCount} variants`;
-  }
+const isOpen = btn.dataset.open === '1';
+const drawer = document.getElementById('vgd-' + gid);
+if (!drawer) return;
+const uCount = dedupeVariants(familyGroups[gid].variants).length;
+if (isOpen) {
+btn.dataset.open = '0';
+drawer.classList.remove('open');
+btn.innerHTML = `&#9662; Show ${uCount} variants`;
+} else {
+btn.dataset.open = '1';
+drawer.classList.add('open');
+btn.innerHTML = `&#9652; Hide ${uCount} variants`;
 }
-
+}
 function toggleDups(key, btn) {
-  const drawer = document.getElementById('dd-' + key);
-  if (!drawer) return;
-  const open  = drawer.classList.toggle('open');
-  const count = drawer.querySelectorAll('.dup-row').length;
-  btn.textContent = open
-    ? `\u25b4 hide ${count} duplicate${count > 1 ? 's' : ''}`
-    : `+ ${count} duplicate${count > 1 ? 's' : ''}`;
+const drawer = document.getElementById('dd-' + key);
+if (!drawer) return;
+const open = drawer.classList.toggle('open');
+const count = drawer.querySelectorAll('.dup-row').length;
+btn.textContent = open
+? `\u25b4 hide ${count} duplicate${count > 1 ? 's' : ''}`
+: `+ ${count} duplicate${count > 1 ? 's' : ''}`;
 }
-
-/* ════════════════════════════════════════════════════════════════
-   TABLE
-════════════════════════════════════════════════════════════════ */
 function renderTable(groups, cont) {
-  let html = `<div class="table-wrap"><table>
-  <thead><tr>
-    <th style="width:44px"></th>
-    <th onclick="tblSort('id')">Root ID</th>
-    <th onclick="tblSort('name')">Name</th>
-    <th>Variants</th>
-    <th>Category</th>
-    <th>Description</th>
-  </tr></thead><tbody>`;
-
-  groups.forEach((group, gid) => {
-    const color   = CATEGORIES[group.category] || '#607080';
-    const rootId  = String(group.rootKey);
-    const deduped = dedupeVariants(group.variants);
-    const pills   = deduped.map(dg =>
-      `<span class="tbl-variant" onclick="copyId('${dg.primary.id}')" title="${esc(dg.label)}">` +
-      `<span style="font-family:'Share Tech Mono',monospace;font-size:10px">${esc(String(dg.primary.id))}</span>` +
-      `<span style="font-size:9px;opacity:.55;margin-left:3px">${esc(dg.label)}</span>` +
-      `</span>`
-    ).join('');
-
-    html += `<tr style="--cat-color:${color}">` +
-      `<td class="td-icon">${iconHtml(group,'table')}</td>` +
-      `<td><div class="card-id-box tbl-id" onclick="copyId('${rootId}')" title="Copy root ID">${esc(rootId)}</div></td>` +
-      `<td class="td-name"><span class="row-bar"></span>${esc(group.name)}</td>` +
-      `<td><div style="display:flex;flex-wrap:wrap;gap:4px;min-width:180px">${pills}</div></td>` +
-      `<td><span class="badge badge-cat" style="--cat-color:${color}">${esc(group.category)}</span></td>` +
-      `<td class="td-desc" title="${esc(group.desc)}">${esc(group.desc)}</td>` +
-      `</tr>`;
-  });
-
-  html += '</tbody></table></div>';
-  cont.innerHTML = html;
+let html = `<div class="table-wrap"><table>
+<thead><tr>
+<th style="width:44px"></th>
+<th onclick="tblSort('id')">Root ID</th>
+<th onclick="tblSort('name')">Name</th>
+<th>Variants</th>
+<th>Category</th>
+<th>Description</th>
+</tr></thead><tbody>`;
+groups.forEach((group, gid) => {
+const color = CATEGORIES[group.category] || '#607080';
+const rootId = String(group.rootKey);
+const deduped = dedupeVariants(group.variants);
+const pills = deduped.map(dg =>
+`<span class="tbl-variant" onclick="copyId('${dg.primary.id}')" title="${esc(dg.label)}">` +
+`<span style="font-family:'Share Tech Mono',monospace;font-size:10px">${esc(String(dg.primary.id))}</span>` +
+`<span style="font-size:9px;opacity:.55;margin-left:3px">${esc(dg.label)}</span>` +
+`</span>`
+).join('');
+html += `<tr style="--cat-color:${color}">` +
+`<td class="td-icon">${iconHtml(group,'table')}</td>` +
+`<td><div class="card-id-box tbl-id" onclick="copyId('${rootId}')" title="Copy root ID">${esc(rootId)}</div></td>` +
+`<td class="td-name"><span class="row-bar"></span>${esc(group.name)}</td>` +
+`<td><div style="display:flex;flex-wrap:wrap;gap:4px;min-width:180px">${pills}</div></td>` +
+`<td><span class="badge badge-cat" style="--cat-color:${color}">${esc(group.category)}</span></td>` +
+`<td class="td-desc" title="${esc(group.desc)}">${esc(group.desc)}</td>` +
+`</tr>`;
+});
+html += '</tbody></table></div>';
+cont.innerHTML = html;
 }
-
 function tblSort(f) {
-  const s = document.getElementById('sort-by');
-  if (f === 'id') s.value = s.value === 'id-asc' ? 'id-desc' : 'id-asc';
-  else            s.value = s.value === 'name-asc' ? 'name-desc' : 'name-asc';
-  render();
+const s = document.getElementById('sort-by');
+if (f === 'id') s.value = s.value === 'id-asc' ? 'id-desc' : 'id-asc';
+else s.value = s.value === 'name-asc' ? 'name-desc' : 'name-asc';
+render();
 }
-
-
-/* ════════════════════════════════════════════════════════════════
-   UI HELPERS
-════════════════════════════════════════════════════════════════ */
 function setView(v) {
-  currentView = v;
-  document.getElementById('btn-grid').classList.toggle('active', v === 'grid');
-  document.getElementById('btn-table').classList.toggle('active', v === 'table');
-  render();
+currentView = v;
+document.getElementById('btn-grid').classList.toggle('active', v === 'grid');
+document.getElementById('btn-table').classList.toggle('active', v === 'table');
+render();
 }
-
 let dark = true;
 let searchTimer;
-
-/* ── Safe init — wrap in try/catch so a DOM error can't block loadAllData ── */
 try {
-  const tb1 = document.getElementById('theme-btn');
-  if (tb1) tb1.addEventListener('click', () => {
-    dark = !dark;
-    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-    const lbl = document.getElementById('theme-label');
-    const ico = document.getElementById('theme-icon');
-    if (lbl) lbl.textContent = dark ? 'Light' : 'Dark';
-    if (ico) ico.innerHTML = dark
-      ? '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"/>'
-      : '<path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>';
-  });
-  const srch = document.getElementById('search');
-  if (srch) srch.addEventListener('input', () => {
-    clearTimeout(searchTimer); searchTimer = setTimeout(render, 180);
-  });
-  const fu = document.getElementById('filter-upgrade');
-  const fd = document.getElementById('filter-duration');
-  const sb = document.getElementById('sort-by');
-  if (fu) fu.addEventListener('change', render);
-  if (fd) fd.addEventListener('change', render);
-  if (sb) sb.addEventListener('change', render);
+const tb1 = document.getElementById('theme-btn');
+if (tb1) tb1.addEventListener('click', () => {
+dark = !dark;
+document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+const lbl = document.getElementById('theme-label');
+const ico = document.getElementById('theme-icon');
+if (lbl) lbl.textContent = dark ? 'Light' : 'Dark';
+if (ico) ico.innerHTML = dark
+? '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"/>'
+: '<path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>';
+});
+const srch = document.getElementById('search');
+if (srch) srch.addEventListener('input', () => {
+clearTimeout(searchTimer); searchTimer = setTimeout(render, 180);
+});
+const fu = document.getElementById('filter-upgrade');
+const fd = document.getElementById('filter-duration');
+const sb = document.getElementById('sort-by');
+if (fu) fu.addEventListener('change', render);
+if (fd) fd.addEventListener('change', render);
+if (sb) sb.addEventListener('change', render);
 } catch(initErr) {
-  console.error('Init error (non-fatal):', initErr);
+console.error('Init error (non-fatal):', initErr);
 }
-
 function copyId(id) {
-  navigator.clipboard.writeText(String(id)).catch(() => {
-    const t = document.createElement('textarea');
-    t.value = String(id); document.body.appendChild(t);
-    t.select(); document.execCommand('copy'); t.remove();
-  });
-  showToast('📋 Copied: ' + id);
+navigator.clipboard.writeText(String(id)).catch(() => {
+const t = document.createElement('textarea');
+t.value = String(id); document.body.appendChild(t);
+t.select(); document.execCommand('copy'); t.remove();
+});
+showToast('📋 Copied: ' + id);
 }
 function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
+const t = document.getElementById('toast');
+t.textContent = msg; t.classList.add('show');
+setTimeout(() => t.classList.remove('show'), 2200);
 }
 function esc(s) {
-  return String(s)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+return String(s)
+.replace(/&/g,'&amp;').replace(/</g,'&lt;')
+.replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-/* ── Kick off data load on page opened ── */
-loadAllData();
-</script>
+loadAllData();</script>
 </body>
 </html>
