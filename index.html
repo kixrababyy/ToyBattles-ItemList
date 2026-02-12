@@ -196,32 +196,70 @@ option{background:var(--surface)}
 .reset-btn:hover{border-color:var(--accent2);color:var(--text)}
 
 /* ════════════════════════════════════════════════════════════════
-   CATEGORY STRIP
+   TWO-ROW NAV
 ════════════════════════════════════════════════════════════════ */
-.cat-strip-wrap{
-  background:var(--bg3);border-bottom:1px solid var(--border);
-  padding:0 24px;overflow-x:auto;scrollbar-width:none;
+.nav-wrap{
+  position:sticky;top:56px;z-index:90;
 }
-.cat-strip-wrap::-webkit-scrollbar{display:none}
-.cat-strip{
-  max-width:1600px;margin:0 auto;
-  display:flex;gap:2px;padding:7px 0;
+/* Row 1: Main tabs */
+.main-tabs-row{
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  padding:0 24px;
 }
-.cat-btn{
-  white-space:nowrap;padding:4px 13px;
-  border-radius:20px;border:1px solid transparent;
-  background:transparent;color:var(--text2);
-  font-family:'Barlow',sans-serif;font-size:12px;font-weight:500;
-  cursor:pointer;transition:all .15s;
-  display:flex;align-items:center;gap:5px;
+.main-tabs-inner{
+  max-width:1600px;margin:0 auto;display:flex;
 }
-.cat-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.cat-btn:hover{color:var(--text);background:var(--surface)}
-.cat-btn.active{
-  border-color:var(--cat-color,var(--accent2));
-  color:var(--text);background:var(--surface);
-  box-shadow:0 0 0 1px var(--cat-color,var(--accent2));
+.main-tab{
+  font-family:'Rajdhani',sans-serif;
+  font-size:16px;font-weight:700;letter-spacing:.6px;
+  padding:14px 36px;
+  background:transparent;border:none;
+  color:var(--text3);cursor:pointer;
+  border-bottom:3px solid transparent;
+  margin-bottom:-1px;
+  transition:color .15s,border-color .15s,background .15s;
 }
+.main-tab:hover{color:var(--text);background:var(--surface)}
+.main-tab.active{color:var(--text);background:var(--surface)}
+#tab-characters.active{border-bottom-color:#FF69B4;color:#FF69B4}
+#tab-weapons.active   {border-bottom-color:#5aaa70;color:#5aaa70}
+#tab-other.active     {border-bottom-color:var(--accent2);color:var(--text)}
+#tab-characters:hover {color:#FF69B4}
+#tab-weapons:hover    {color:#5aaa70}
+
+/* Row 2: Sub-tabs */
+.sub-tabs-row{
+  background:var(--bg3);
+  border-bottom:2px solid var(--border);
+  padding:0 24px;
+  overflow-x:auto;scrollbar-width:none;
+}
+.sub-tabs-row::-webkit-scrollbar{display:none}
+.sub-tabs-inner{
+  max-width:1600px;margin:0 auto;display:flex;
+}
+.sub-tab{
+  white-space:nowrap;
+  font-family:'Barlow',sans-serif;font-size:13px;font-weight:500;
+  padding:9px 20px;
+  background:transparent;border:none;
+  color:var(--text2);cursor:pointer;
+  border-bottom:3px solid transparent;
+  margin-bottom:-2px;
+  display:flex;align-items:center;gap:6px;
+  transition:color .15s,border-color .15s,background .15s;
+}
+.sub-tab:hover{color:var(--text);background:var(--surface)}
+.sub-tab.active{
+  color:var(--text);
+  background:var(--surface);
+  border-bottom-color:var(--cat-color,var(--accent2));
+}
+.sub-tab-dot{
+  width:7px;height:7px;border-radius:50%;flex-shrink:0;
+}
+.sub-tab-count{font-size:10px;opacity:.5}
 
 /* ════════════════════════════════════════════════════════════════
    CONTENT
@@ -280,7 +318,7 @@ option{background:var(--surface)}
 /* Clean big ID box */
 .card-id-box {
   font-family:'Share Tech Mono',monospace;
-  font-size:7px;font-weight:600;
+  font-size:10px;font-weight:600;
   color:var(--accent2);
   background:var(--bg);
   border:1px solid var(--border2);
@@ -448,8 +486,25 @@ td.td-desc{max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:no
     </div>
   </div>
 
-  <div class="cat-strip-wrap">
-    <div class="cat-strip" id="cat-strip"></div>
+  <div class="nav-wrap">
+    <!-- Row 1: Main tabs -->
+    <div class="main-tabs-row">
+      <div class="main-tabs-inner">
+        <button class="main-tab active" id="tab-characters" onclick="setMainTab('characters')">
+          👤 Characters
+        </button>
+        <button class="main-tab" id="tab-weapons" onclick="setMainTab('weapons')">
+          🔫 Weapons
+        </button>
+        <button class="main-tab" id="tab-other" onclick="setMainTab('other')">
+          📦 Other
+        </button>
+      </div>
+    </div>
+    <!-- Row 2: Sub-tabs (populated by JS) -->
+    <div class="sub-tabs-row" id="sub-tabs-row">
+      <div class="sub-tabs-inner" id="cat-strip"></div>
+    </div>
   </div>
 
   <div class="content">
@@ -541,11 +596,17 @@ const UPGRADE_CONFIG = {
   'Grenade Launcher': {'5':'Unlimited - Blast Radius','6':'Unlimited - Power',       '7':'Unlimited - Firing Rate'}
 };
 
+const TAB_GROUPS = {
+  characters: ['Pandora','Naomi','Kai','CHIP','Knox','Simon','Sophita','Amelia','Sharkill','Accessories','Other Items','Banned Items'],
+  weapons:    ['Melee','Rifle','Shotgun','Sniper','MicroGun','Bazooka','Grenade Launcher']
+};
+
 /* ════════════════════════════════════════════════════════════════
    STATE
 ════════════════════════════════════════════════════════════════ */
 let allItems       = [];
-let iconData       = {};   // ii_id → {sheet, offset, w, h, cols} — populated when ICONS_ENABLED
+let iconData       = {};
+let activeMainTab  = 'characters';
 let activeCategory = 'All';
 let currentView    = 'grid';
 
@@ -747,23 +808,39 @@ function determineUpgrade(itemId, category) {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   CATEGORY STRIP
+   MAIN TABS + CATEGORY STRIP
 ════════════════════════════════════════════════════════════════ */
+function setMainTab(tab) {
+  activeMainTab  = tab;
+  activeCategory = 'All';
+  document.querySelectorAll('.main-tab').forEach(b =>
+    b.classList.toggle('active', b.id === 'tab-' + tab));
+  buildCategoryStrip();
+  render();
+}
+
 function buildCategoryStrip() {
-  const counts = {};
+  const tabCats  = TAB_GROUPS[activeMainTab] || [];
+  const counts   = {};
   allItems.forEach(i => { counts[i.category] = (counts[i.category] || 0) + 1; });
+  const tabTotal = allItems.filter(i => tabCats.includes(i.category)).length;
+
   const strip = document.getElementById('cat-strip');
-  let html = `<button class="cat-btn active" data-cat="All"
+  let html = `<button class="sub-tab active" data-cat="All"
     onclick="setCategory('All')" style="--cat-color:var(--accent2)">
-    <span class="cat-dot" style="background:var(--accent2)"></span>
-    All <span style="color:var(--text3);font-size:10px">(${allItems.length.toLocaleString()})</span>
+    <span class="sub-tab-dot" style="background:var(--accent2)"></span>
+    All
+    <span class="sub-tab-count">(${tabTotal.toLocaleString()})</span>
   </button>`;
-  Object.entries(CATEGORIES).forEach(([name, color]) => {
+
+  tabCats.forEach(name => {
     if (!counts[name]) return;
-    html += `<button class="cat-btn" data-cat="${name}"
+    const color = CATEGORIES[name] || '#607080';
+    html += `<button class="sub-tab" data-cat="${name}"
       onclick="setCategory('${esc(name)}')" style="--cat-color:${color}">
-      <span class="cat-dot" style="background:${color}"></span>
-      ${esc(name)} <span style="color:var(--text3);font-size:10px">(${counts[name].toLocaleString()})</span>
+      <span class="sub-tab-dot" style="background:${color}"></span>
+      ${esc(name)}
+      <span class="sub-tab-count">(${counts[name].toLocaleString()})</span>
     </button>`;
   });
   strip.innerHTML = html;
@@ -771,7 +848,7 @@ function buildCategoryStrip() {
 
 function setCategory(cat) {
   activeCategory = cat;
-  document.querySelectorAll('.cat-btn').forEach(b =>
+  document.querySelectorAll('.sub-tab').forEach(b =>
     b.classList.toggle('active', b.dataset.cat === cat));
   render();
 }
@@ -786,6 +863,9 @@ function getFiltered() {
   const srt = document.getElementById('sort-by').value;
 
   let items = allItems;
+  // Restrict to active main tab's categories first
+  const tabCats = TAB_GROUPS[activeMainTab] || [];
+  items = items.filter(i => tabCats.includes(i.category));
   if (activeCategory !== 'All') items = items.filter(i => i.category === activeCategory);
   if (q) items = items.filter(i =>
     i.name.toLowerCase().includes(q) ||
@@ -817,9 +897,11 @@ function resetFilters() {
   document.getElementById('filter-upgrade').value = '';
   document.getElementById('filter-duration').value = '';
   document.getElementById('sort-by').value = 'name-asc';
+  activeMainTab  = 'characters';
   activeCategory = 'All';
-  document.querySelectorAll('.cat-btn').forEach(b =>
-    b.classList.toggle('active', b.dataset.cat === 'All'));
+  document.querySelectorAll('.main-tab').forEach(b =>
+    b.classList.toggle('active', b.id === 'tab-characters'));
+  buildCategoryStrip();
   render();
 }
 
