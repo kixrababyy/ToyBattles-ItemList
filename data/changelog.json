@@ -1,0 +1,72 @@
+{
+  "currentVersion": "2.1.0",
+  "lastUpdated": "2026-02-16",
+  "entries": [
+    {
+      "version": "2.1.0",
+      "date": "February 16, 2026",
+      "changes": [
+        {
+          "type": "added",
+          "text": "Weapon stats modal with detailed abilities, damage, and ammunition info"
+        },
+        {
+          "type": "added",
+          "text": "Upgrade variant selector for easy ID lookup"
+        },
+        {
+          "type": "added",
+          "text": "Accessories sub-categories (Head, Back, Waist)"
+        },
+        {
+          "type": "improved",
+          "text": "Multi-character filtering - items now appear in all their character tabs"
+        },
+        {
+          "type": "improved",
+          "text": "Performance optimization - 30+ second load reduced to <2 seconds"
+        },
+        {
+          "type": "fixed",
+          "text": "Type 24 and type_inven 27 items now correctly categorized"
+        }
+      ]
+    },
+    {
+      "version": "2.0.0",
+      "date": "February 15, 2026",
+      "changes": [
+        {
+          "type": "added",
+          "text": "Multi-character support with colored pills"
+        },
+        {
+          "type": "added",
+          "text": "Banned items indicator"
+        },
+        {
+          "type": "improved",
+          "text": "UI redesign with better spacing and colors"
+        }
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "February 14, 2026",
+      "changes": [
+        {
+          "type": "added",
+          "text": "Initial release of ToyBattles Item Database"
+        },
+        {
+          "type": "added",
+          "text": "Item search and filtering"
+        },
+        {
+          "type": "added",
+          "text": "Character, Weapon, and Other tabs"
+        }
+      ]
+    }
+  ]
+}
