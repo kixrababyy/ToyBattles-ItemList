@@ -116,7 +116,8 @@ ICON_EXT: '.png',
 ICONS_DIR: 'assets/icons/',
 DATA_FILES: {
 items:   'data/iteminfo.cdb.json',
-weapons: 'data/weaponinfo_cdb.json',
+weaponItems: 'data/itemweaponsinfo.cdb.json',
+weaponStats: 'data/weaponinfo_cdb.json',
 icons:   'data/iconsinfo.cdb.json',
 banned:  'data/banned.json'
 }
@@ -205,12 +206,22 @@ itemsRaw = await r.json();
 } catch(e) { throw new Error(`iteminfo.cdb.json — ${e.message}`); }
 setStep('step-items','done'); setBar(40);
 setStep('step-weapons','active');
+// Load weapon items (ii_id, ii_name, etc.)
+let weaponItemsRaw = [];
+try {
+const r = await fetch(CONFIG.DATA_FILES.weaponItems);
+if (!r.ok) throw new Error(`HTTP ${r.status}`);
+weaponItemsRaw = await r.json();
+} catch(e) {
+console.warn('itemweaponsinfo.cdb.json not loaded:', e.message);
+}
+// Load weapon stats (wi_id, wi_ability_a, etc.)
 let weaponStatsMap = new Map();
 try {
-const r = await fetch(CONFIG.DATA_FILES.weapons);
+const r = await fetch(CONFIG.DATA_FILES.weaponStats);
 if (!r.ok) throw new Error(`HTTP ${r.status}`);
-const weaponsRaw = await r.json();
-const weaponArr = Array.isArray(weaponsRaw) ? weaponsRaw : (weaponsRaw.items || weaponsRaw.data || []);
+const weaponStatsRaw = await r.json();
+const weaponArr = Array.isArray(weaponStatsRaw) ? weaponStatsRaw : (weaponStatsRaw.items || weaponStatsRaw.data || []);
 // Create lookup map by weapon ID
 for (const weapon of weaponArr) {
 if (weapon.wi_id) {
@@ -260,10 +271,11 @@ const norm = v => Array.isArray(v) ? v
 : (v && Array.isArray(v.items)) ? v.items
 : (v ? [v] : []);
 const itemArr = norm(itemsRaw);
+const weaponItemArr = norm(weaponItemsRaw);
 const iconArr = norm(iconsRaw);
 const seen = new Set();
 const merged = [];
-for (const item of itemArr) {
+for (const item of [...itemArr, ...weaponItemArr]) {
 const key = String(item.ii_id ?? '');
 if (key && !seen.has(key)) { seen.add(key); merged.push(item); }
 }
