@@ -24,11 +24,11 @@
         },
         {
           "type": "improved",
-          "text": "Performance optimization - 30+ second load reduced to <2 seconds"
+          "text": "Performance optimization"
         },
         {
-          "type": "fixed",
-          "text": "Type 24 and type_inven 27 items now correctly categorized"
+          "type": "added",
+          "text": "Weapons now show stats for each items"
         }
       ]
     },
