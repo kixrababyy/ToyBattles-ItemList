@@ -296,6 +296,45 @@ w, h,
 sheetW: ic.ii_filesize || 512
 };
 }
+function getWeaponStats(id, item, statsMap) {
+// Try exact ID first
+if (statsMap && statsMap.size > 0) {
+let stats = statsMap.get(id);
+if (stats) return stats;
+
+// If root ID (ending in 00), try base variant (ending in 10)
+if (id.endsWith('00')) {
+const baseId = id.slice(0, -2) + '10';
+stats = statsMap.get(baseId);
+if (stats) {
+console.log('Using stats from ' + baseId + ' for root ' + id);
+return stats;
+}
+}
+
+// Try using first 5 digits to find any matching weapon
+const prefix = id.slice(0, 5);
+for (const [statId, statData] of statsMap.entries()) {
+if (statId.startsWith(prefix)) {
+console.log('Using stats from ' + statId + ' for ' + id + ' (prefix match)');
+return statData;
+}
+}
+}
+
+// Fallback to item's own fields or zeros
+return {
+abilityA: item.wi_ability_a || 0,
+abilityB: item.wi_ability_b || 0,
+abilityC: item.wi_ability_c || 0,
+abilityD: item.wi_ability_d || 0,
+damHead: item.wi_dam_head || 0,
+damUpper: item.wi_dam_upper || 0,
+damUnder: item.wi_dam_under || 0,
+bulletCapacity: item.wi_bullet_capacity || 0,
+bulletTotal: item.wi_bullet_total || 0
+};
+}
 allItems = merged.map(item => {
 const s = v => v != null ? String(v) : '';
 const classFlags = {
@@ -339,44 +378,7 @@ effect: item.ef_effect_1 != null ? Number(item.ef_effect_1) : 0,
 nameOption: s(item.ii_name_option),
 sprite,
 classFlags,
-// Weapon stats - smart lookup with fallback
-weaponStats: (() => {
-// Try exact ID first
-let stats = weaponStatsMap.get(id);
-if (stats) return stats;
-
-// If root ID (ending in 00), try base variant (ending in 10)
-if (id.endsWith('00')) {
-const baseId = id.slice(0, -2) + '10';
-stats = weaponStatsMap.get(baseId);
-if (stats) {
-console.log(`Using stats from ${baseId} for root ${id}`);
-return stats;
-}
-}
-
-// Try using first 5 digits to find any matching weapon
-const prefix = id.slice(0, 5);
-for (const [statId, statData] of weaponStatsMap.entries()) {
-if (statId.startsWith(prefix)) {
-console.log(`Using stats from ${statId} for ${id} (prefix match)`);
-return statData;
-}
-}
-
-// Fallback to item's own fields or zeros
-return {
-abilityA: item.wi_ability_a || 0,
-abilityB: item.wi_ability_b || 0,
-abilityC: item.wi_ability_c || 0,
-abilityD: item.wi_ability_d || 0,
-damHead: item.wi_dam_head || 0,
-damUpper: item.wi_dam_upper || 0,
-damUnder: item.wi_dam_under || 0,
-bulletCapacity: item.wi_bullet_capacity || 0,
-bulletTotal: item.wi_bullet_total || 0
-};
-})()
+weaponStats: getWeaponStats(id, item, weaponStatsMap)
 };
 });
 setStep('step-build','done'); setBar(100);
@@ -981,9 +983,15 @@ let currentWeaponGroup = null;
 function openWeaponModal(gid) {
 const group = familyGroups[gid];
 if (!group || !WEAPON_CATS.has(group.category)) return;
+console.log('=== Opening Weapon Modal ===');
+console.log('Group:', group);
+console.log('weaponStatsMap size:', weaponStatsMap.size);
+console.log('weaponStatsMap has keys:', Array.from(weaponStatsMap.keys()).slice(0, 10));
 currentWeaponGroup = group;
 const modal = document.getElementById('weapon-modal');
 const weaponData = group.variants[0]; // Use first variant for base stats
+console.log('Weapon data:', weaponData);
+console.log('Weapon weaponStats:', weaponData.weaponStats);
 // Set weapon image
 const imgContainer = document.getElementById('weapon-modal-image');
 imgContainer.innerHTML = iconHtml(group, 'card');
@@ -994,28 +1002,34 @@ document.getElementById('weapon-modal-desc').textContent = group.desc || 'No des
 const labels = WEAPON_STAT_LABELS[group.category];
 // Try to get stats from variant, or lookup by root ID
 let stats = weaponData.weaponStats || group.variants[0]?.weaponStats;
+console.log('Initial stats from variant:', stats);
 // If stats are all zeros or missing, try looking up by root ID
 if (!stats || (stats.abilityA === 0 && stats.abilityB === 0 && stats.abilityC === 0 && stats.abilityD === 0)) {
 const rootId = String(group.rootKey);
+console.log('Modal: Initial stats missing or all zeros for ' + rootId + '. Trying lookup...');
 stats = weaponStatsMap.get(rootId);
+console.log('Modal: Exact match for ' + rootId + ':', stats);
 if (!stats && rootId.endsWith('00')) {
 // Try base variant (ending in 10)
 const baseId = rootId.slice(0, -2) + '10';
 stats = weaponStatsMap.get(baseId);
-console.log(`Modal: Using stats from ${baseId} for root ${rootId}`, stats);
+console.log('Modal: Using stats from ' + baseId + ' for root ' + rootId + ':', stats);
 }
 if (!stats) {
 // Try first 5 digit prefix match
 const prefix = rootId.slice(0, 5);
+console.log('Modal: Trying prefix match with ' + prefix + '...');
 for (const [statId, statData] of weaponStatsMap.entries()) {
 if (statId.startsWith(prefix)) {
 stats = statData;
-console.log(`Modal: Using stats from ${statId} for ${rootId} (prefix match)`, stats);
+console.log('Modal: Using stats from ' + statId + ' for ' + rootId + ' (prefix match):', stats);
 break;
 }
 }
 }
 }
+console.log('Modal: Final stats for display:', stats);
+console.log('Modal: Labels:', labels);
 if (stats && labels) {
 const statsGrid = document.getElementById('weapon-stats-grid');
 statsGrid.innerHTML = `
@@ -1036,9 +1050,17 @@ statsGrid.innerHTML = `
 <div class="weapon-stat-value">${stats.abilityD}</div>
 </div>
 `;
+} else {
+const statsGrid = document.getElementById('weapon-stats-grid');
+statsGrid.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3)">' +
+'<p>No weapon stats available for this item.</p>' +
+'<p style="font-size:11px;margin-top:8px">ID: ' + group.rootKey + '</p>' +
+'</div>';
+console.warn('Modal: Cannot display stats. stats=' + !!stats + ', labels=' + !!labels);
+}
 // Damage section
 const damageSection = document.getElementById('weapon-damage-section');
-if (stats.damHead || stats.damUpper || stats.damUnder) {
+if (stats && (stats.damHead || stats.damUpper || stats.damUnder)) {
 damageSection.innerHTML = `
 <div class="weapon-damage-title">Damage</div>
 <div class="weapon-damage-grid">
@@ -1062,7 +1084,7 @@ damageSection.style.display = 'none';
 }
 // Ammo section
 const ammoSection = document.getElementById('weapon-ammo-section');
-if (stats.bulletCapacity || stats.bulletTotal) {
+if (stats && (stats.bulletCapacity || stats.bulletTotal)) {
 const totalBullets = stats.bulletCapacity + stats.bulletTotal;
 ammoSection.innerHTML = `
 <div class="weapon-ammo-title">Ammunition</div>
@@ -1077,7 +1099,6 @@ ammoSection.innerHTML = `
 ammoSection.style.display = 'block';
 } else {
 ammoSection.style.display = 'none';
-}
 }
 // Populate upgrade type dropdown
 const upgradeConfig = UPGRADE_CONFIG[group.category];
@@ -1097,6 +1118,11 @@ modal.classList.add('open');
 function closeWeaponModal() {
 document.getElementById('weapon-modal').classList.remove('open');
 currentWeaponGroup = null;
+}
+function closeWeaponModalBackdrop(event) {
+if (event.target === event.currentTarget) {
+closeWeaponModal();
+}
 }
 function updateVariantID() {
 if (!currentWeaponGroup) return;
@@ -1123,7 +1149,7 @@ showToast('Item ID copied: ' + idText);
 });
 }
 loadAllData();</script>
-<div id="weapon-modal" class="weapon-modal" onclick="if(event.target===this) closeWeaponModal()">
+<div id="weapon-modal" class="weapon-modal" onclick="closeWeaponModalBackdrop(event)">
 <div class="weapon-modal-content">
 <button class="weapon-modal-close" onclick="closeWeaponModal()">✕</button>
 <div class="weapon-modal-body">
