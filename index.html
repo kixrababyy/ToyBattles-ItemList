@@ -132,6 +132,9 @@ const CATEGORIES = {
 'Amelia': '#5aaa5a',
 'Sharkill': '#CC2200',
 'Accessories': '#00AAAA',
+'Head Accessory': '#00CCCC',
+'Back Accessory': '#00AAAA',
+'Waist Accessory': '#008888',
 'Melee': '#5aaa70',
 'Rifle': '#4a9a60',
 'Shotgun': '#3a8a50',
@@ -143,16 +146,16 @@ const CATEGORIES = {
 'Banned Items': '#7a1010'
 };
 const UPGRADE_CONFIG = {
-'Melee': {'5':'Unlimited - Power', '6':'Unlimited - Run Speed', '7':'Unlimited - Range'},
-'Rifle': {'5':'Unlimited - Power', '6':'Unlimited - Accuracy', '7':'Unlimited - Ammo Capacity'},
-'Shotgun': {'5':'Unlimited - Power', '6':'Unlimited - Firing Rate', '7':'Unlimited - Reload Speed'},
-'Sniper': {'5':'Unlimited - Reload Speed','6':'Unlimited - Zoom Speed', '7':'Unlimited - Power'},
-'MicroGun': {'5':'Unlimited - Warm Up Time','6':'Unlimited - Power', '7':'Unlimited - Run Speed'},
-'Bazooka': {'5':'Unlimited - Firing Rate', '6':'Unlimited - Power', '7':'Unlimited - Projectile Speed'},
-'Grenade Launcher': {'5':'Unlimited - Blast Radius','6':'Unlimited - Power', '7':'Unlimited - Firing Rate'}
+'Melee': {'5':'Power', '6':'Run Speed', '7':'Range'},
+'Rifle': {'5':'Power', '6':'Accuracy', '7':'Ammo Capacity'},
+'Shotgun': {'5':'Power', '6':'Firing Rate', '7':'Reload Speed'},
+'Sniper': {'5':'Reload Speed','6':'Zoom Speed', '7':'Power'},
+'MicroGun': {'5':'Warm Up Time','6':'Power', '7':'Run Speed'},
+'Bazooka': {'5':'Firing Rate', '6':'Power', '7':'Projectile Speed'},
+'Grenade Launcher': {'5':'Blast Radius','6':'Power', '7':'Firing Rate'}
 };
 const TAB_GROUPS = {
-characters: ['Pandora','Naomi','Kai','CHIP','Knox','Simon','Sophita','Amelia','Sharkill','Accessories'],
+characters: ['Pandora','Naomi','Kai','CHIP','Knox','Simon','Sophita','Amelia','Sharkill','Accessories','Head Accessory','Back Accessory','Waist Accessory'],
 weapons: ['Melee','Rifle','Shotgun','Sniper','MicroGun','Bazooka','Grenade Launcher'],
 other: ['Other Items','Banned Items']
 };
@@ -349,9 +352,28 @@ if (folderIs('gatling') || fullHas('gatling')) return { category: 'MicroGun', ch
 if (folderIs('launcher') || fullHas('launcher')) return { category: 'Bazooka', characters: [] };
 if (folderIs('grenade') || fullHas('grenade')) return { category: 'Grenade Launcher', characters: [] };
 
-// Accessories (filename-based)
+// Accessories (type or filename-based) with sub-categories
 const isAcc = folder.startsWith('acc') || segments.some(s => s === 'acc');
-if (isAcc) return { category: 'Accessories', characters: [] };
+if (isAcc || ii_type === 7 || ii_type === 8 || ii_type === 9 || 
+    ii_type_inven === 19 || ii_type_inven === 20 || ii_type_inven === 21) {
+// Determine accessory sub-category
+// Head Accessory: ii_type=7 OR ii_type_inven=19 OR keywords
+if (ii_type === 7 || ii_type_inven === 19 || 
+    fullHas('glasses') || fullHas('hairpin') || fullHas('earring') || 
+    fullHas('mask') || fullHas('head')) {
+return { category: 'Head Accessory', characters: [] };
+}
+// Waist Accessory: ii_type=8 OR ii_type_inven=20 OR keywords
+if (ii_type === 8 || ii_type_inven === 20 || fullHas('belt')) {
+return { category: 'Waist Accessory', characters: [] };
+}
+// Back Accessory: ii_type=9 OR ii_type_inven=21 OR keywords
+if (ii_type === 9 || ii_type_inven === 21 || fullHas('back')) {
+return { category: 'Back Accessory', characters: [] };
+}
+// Default to general Accessories if no sub-category matched
+return { category: 'Accessories', characters: [] };
+}
 
 // Character items (ii_class_* flags)
 const classMap = {
@@ -396,7 +418,14 @@ const lastTwo = parseInt(idStr.slice(-2), 10);
 if (lastTwo >= 50 && lastTwo <= 59) return 'Upgradeable';
 }
 const ups = UPGRADE_CONFIG[category];
-if (ups) { const m = ups[idStr.slice(-1)]; if (m) return m; }
+if (ups && idStr.length >= 2) {
+const tensDigit = idStr.slice(-2, -1); // Second-to-last digit
+const onesDigit = idStr.slice(-1); // Last digit
+const upgradeType = ups[tensDigit];
+if (upgradeType) {
+return `Unlimited - ${upgradeType} Level ${onesDigit}`;
+}
+}
 return 'Not unlimited/Not Upgradable';
 }
 function buildDurationDropdown() {
@@ -425,8 +454,21 @@ render();
 function buildCategoryStrip() {
 const tabCats = TAB_GROUPS[activeMainTab] || [];
 const counts = {};
-allItems.forEach(i => { counts[i.category] = (counts[i.category] || 0) + 1; });
-const tabTotal = allItems.filter(i => tabCats.includes(i.category)).length;
+allItems.forEach(i => { 
+counts[i.category] = (counts[i.category] || 0) + 1;
+// Also count items in their character categories
+if (i.characters && i.characters.length > 0) {
+i.characters.forEach(char => {
+if (char !== i.category) { // Don't double-count the primary category
+counts[char] = (counts[char] || 0) + 1;
+}
+});
+}
+});
+const tabTotal = allItems.filter(i => 
+tabCats.includes(i.category) || 
+(i.characters && i.characters.some(char => tabCats.includes(char)))
+).length;
 const strip = document.getElementById('cat-strip');
 let html = `<button class="sub-tab active" data-cat="All"
 onclick="setCategory('All')" style="--cat-color:var(--accent2)">
@@ -478,8 +520,16 @@ const dur = document.getElementById('filter-duration').value;
 const srt = document.getElementById('sort-by').value;
 let items = allItems;
 const tabCats = TAB_GROUPS[activeMainTab] || [];
-items = items.filter(i => tabCats.includes(i.category));
-if (activeCategory !== 'All') items = items.filter(i => i.category === activeCategory);
+items = items.filter(i => 
+tabCats.includes(i.category) || 
+(i.characters && i.characters.some(char => tabCats.includes(char)))
+);
+if (activeCategory !== 'All') {
+items = items.filter(i => 
+i.category === activeCategory || 
+(i.characters && i.characters.includes(activeCategory))
+);
+}
 if (q) items = items.filter(i =>
 i.name.toLowerCase().includes(q) ||
 String(i.id).includes(q) ||
@@ -610,15 +660,22 @@ return null;
 }
 function variantLabel(v) {
 const idStr = String(v.id);
-const lastOne = idStr.slice(-1);
 const isUnlimited = (v.duration || '').toLowerCase().includes('unlimited');
 const dur = v.duration || 'Permanent';
 const isWeapon = WEAPON_CATS.has(v.category);
-const isAcc = v.category === 'Accessories';
+const isAcc = v.category === 'Accessories' || v.category === 'Head Accessory' || 
+              v.category === 'Back Accessory' || v.category === 'Waist Accessory';
 if (isWeapon) {
-if (isUnlimited) {
+if (isUnlimited && idStr.length >= 2) {
 const ups = UPGRADE_CONFIG[v.category];
-if (ups && ups[lastOne]) return ups[lastOne];
+if (ups) {
+const tensDigit = idStr.slice(-2, -1); // Second-to-last digit
+const onesDigit = idStr.slice(-1); // Last digit
+const upgradeType = ups[tensDigit];
+if (upgradeType) {
+return `Unlimited - ${upgradeType} Level ${onesDigit}`;
+}
+}
 }
 return dur;
 }
@@ -629,7 +686,10 @@ if (st === 'speed') return `${dur} — Run Speed`;
 if (st === 'hp') return `${dur} — HP`;
 return dur;
 }
-if (isUnlimited && CHAR_UPGRADE_MAP[lastOne]) return CHAR_UPGRADE_MAP[lastOne];
+if (isUnlimited && idStr.length >= 1) {
+const lastOne = idStr.slice(-1);
+if (CHAR_UPGRADE_MAP[lastOne]) return CHAR_UPGRADE_MAP[lastOne];
+}
 const st = statTypeOf(v.effect || 0, v.nameOption || '');
 if (st === 'speed') return `${dur} — Run Speed`;
 if (st === 'hp') return `${dur} — HP`;
