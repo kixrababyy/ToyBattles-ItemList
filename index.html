@@ -276,7 +276,7 @@ g: item.ii_class_g || 0,
 h: item.ii_class_h || 0,
 i: item.ii_class_i || 0
 };
-const catResult = determineCategory(s(item.ii_meshfilename), classFlags, item.ii_type);
+const catResult = determineCategory(s(item.ii_meshfilename), classFlags, item.ii_type, item.ii_type_inven);
 let category = catResult.category;
 let characters = catResult.characters;
 const upgrade = determineUpgrade(item.ii_id, category);
@@ -328,11 +328,11 @@ setTimeout(() => { ls.style.display = 'none'; }, 420);
 showLoadError(err.message);
 }
 }
-function determineCategory(filename, classFlags = {}, ii_type = null) {
+function determineCategory(filename, classFlags = {}, ii_type = null, ii_type_inven = null) {
 if (!filename || !filename.trim()) return { category: 'Other Items', characters: [] };
 
-// Force items/boxes (ii_type === 24) to Other Items
-if (ii_type === 24) return { category: 'Other Items', characters: [] };
+// Force items/boxes (ii_type === 24 or ii_type_inven === 27) to Other Items
+if (ii_type === 24 || ii_type_inven === 27) return { category: 'Other Items', characters: [] };
 
 const lower = filename.toLowerCase().trim().replace(/\\/g, '/');
 const segments = lower.split('/');
