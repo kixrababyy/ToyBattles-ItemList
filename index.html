@@ -117,7 +117,7 @@ ICONS_DIR: 'assets/icons/',
 DATA_FILES: {
 items:   'data/iteminfo.cdb.json',
 weaponItems: 'data/itemweaponsinfo.cdb.json',
-weaponStats: 'data/weaponinfo_cdb.json',
+weaponStats: 'data/weaponinfo.cdb.json',
 icons:   'data/iconsinfo.cdb.json',
 banned:  'data/banned.json'
 }
@@ -297,8 +297,41 @@ sheetW: ic.ii_filesize || 512
 };
 }
 function getWeaponStats(id, item, statsMap) {
-// Try exact ID first
+// Quick lookups only during initial load (no expensive loops)
 if (statsMap && statsMap.size > 0) {
+// Try exact ID match (O(1) - fast)
+let stats = statsMap.get(id);
+if (stats) return stats;
+
+// If root ID (ending in 00), try base variant (O(1) - fast)
+if (id.endsWith('00')) {
+const baseId = id.slice(0, -2) + '10';
+stats = statsMap.get(baseId);
+if (stats) return stats;
+}
+
+// Skip expensive prefix matching during initial load
+// It will be done in the modal if needed
+}
+
+// Return empty stats structure (will be populated on modal open if needed)
+return {
+abilityA: 0,
+abilityB: 0,
+abilityC: 0,
+abilityD: 0,
+damHead: 0,
+damUpper: 0,
+damUnder: 0,
+bulletCapacity: 0,
+bulletTotal: 0
+};
+}
+function getWeaponStatsComprehensive(id, statsMap) {
+// Comprehensive lookup used ONLY in modal (includes expensive operations)
+if (!statsMap || statsMap.size === 0) return null;
+
+// Try exact ID match
 let stats = statsMap.get(id);
 if (stats) return stats;
 
@@ -307,33 +340,21 @@ if (id.endsWith('00')) {
 const baseId = id.slice(0, -2) + '10';
 stats = statsMap.get(baseId);
 if (stats) {
-console.log('Using stats from ' + baseId + ' for root ' + id);
+console.log('Modal: Using stats from ' + baseId + ' for root ' + id);
 return stats;
 }
 }
 
-// Try using first 5 digits to find any matching weapon
+// Try prefix matching (expensive - only in modal)
 const prefix = id.slice(0, 5);
 for (const [statId, statData] of statsMap.entries()) {
 if (statId.startsWith(prefix)) {
-console.log('Using stats from ' + statId + ' for ' + id + ' (prefix match)');
+console.log('Modal: Using stats from ' + statId + ' for ' + id + ' (prefix match)');
 return statData;
 }
 }
-}
 
-// Fallback to item's own fields or zeros
-return {
-abilityA: item.wi_ability_a || 0,
-abilityB: item.wi_ability_b || 0,
-abilityC: item.wi_ability_c || 0,
-abilityD: item.wi_ability_d || 0,
-damHead: item.wi_dam_head || 0,
-damUpper: item.wi_dam_upper || 0,
-damUnder: item.wi_dam_under || 0,
-bulletCapacity: item.wi_bullet_capacity || 0,
-bulletTotal: item.wi_bullet_total || 0
-};
+return null;
 }
 allItems = merged.map(item => {
 const s = v => v != null ? String(v) : '';
@@ -983,15 +1004,9 @@ let currentWeaponGroup = null;
 function openWeaponModal(gid) {
 const group = familyGroups[gid];
 if (!group || !WEAPON_CATS.has(group.category)) return;
-console.log('=== Opening Weapon Modal ===');
-console.log('Group:', group);
-console.log('weaponStatsMap size:', weaponStatsMap.size);
-console.log('weaponStatsMap has keys:', Array.from(weaponStatsMap.keys()).slice(0, 10));
 currentWeaponGroup = group;
 const modal = document.getElementById('weapon-modal');
 const weaponData = group.variants[0]; // Use first variant for base stats
-console.log('Weapon data:', weaponData);
-console.log('Weapon weaponStats:', weaponData.weaponStats);
 // Set weapon image
 const imgContainer = document.getElementById('weapon-modal-image');
 imgContainer.innerHTML = iconHtml(group, 'card');
@@ -1002,34 +1017,26 @@ document.getElementById('weapon-modal-desc').textContent = group.desc || 'No des
 const labels = WEAPON_STAT_LABELS[group.category];
 // Try to get stats from variant, or lookup by root ID
 let stats = weaponData.weaponStats || group.variants[0]?.weaponStats;
-console.log('Initial stats from variant:', stats);
-// If stats are all zeros or missing, try looking up by root ID
+// If stats are all zeros or missing, do comprehensive lookup
 if (!stats || (stats.abilityA === 0 && stats.abilityB === 0 && stats.abilityC === 0 && stats.abilityD === 0)) {
 const rootId = String(group.rootKey);
-console.log('Modal: Initial stats missing or all zeros for ' + rootId + '. Trying lookup...');
-stats = weaponStatsMap.get(rootId);
-console.log('Modal: Exact match for ' + rootId + ':', stats);
-if (!stats && rootId.endsWith('00')) {
-// Try base variant (ending in 10)
-const baseId = rootId.slice(0, -2) + '10';
-stats = weaponStatsMap.get(baseId);
-console.log('Modal: Using stats from ' + baseId + ' for root ' + rootId + ':', stats);
-}
+stats = getWeaponStatsComprehensive(rootId, weaponStatsMap);
 if (!stats) {
-// Try first 5 digit prefix match
-const prefix = rootId.slice(0, 5);
-console.log('Modal: Trying prefix match with ' + prefix + '...');
-for (const [statId, statData] of weaponStatsMap.entries()) {
-if (statId.startsWith(prefix)) {
-stats = statData;
-console.log('Modal: Using stats from ' + statId + ' for ' + rootId + ' (prefix match):', stats);
-break;
+console.warn('Modal: No stats found for ' + rootId);
+// Use empty stats
+stats = {
+abilityA: 0,
+abilityB: 0,
+abilityC: 0,
+abilityD: 0,
+damHead: 0,
+damUpper: 0,
+damUnder: 0,
+bulletCapacity: 0,
+bulletTotal: 0
+};
 }
 }
-}
-}
-console.log('Modal: Final stats for display:', stats);
-console.log('Modal: Labels:', labels);
 if (stats && labels) {
 const statsGrid = document.getElementById('weapon-stats-grid');
 statsGrid.innerHTML = `
