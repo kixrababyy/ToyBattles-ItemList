@@ -163,6 +163,7 @@ other: ['Other Items','Banned Items']
 let allItems = [];
 let iconData = {};
 let bannedIds = new Set();
+let weaponStatsMap = new Map();
 let activeMainTab = 'characters';
 let activeCategory = 'All';
 let currentView = 'grid';
@@ -216,7 +217,7 @@ weaponItemsRaw = await r.json();
 console.warn('itemweaponsinfo.cdb.json not loaded:', e.message);
 }
 // Load weapon stats (wi_id, wi_ability_a, etc.)
-let weaponStatsMap = new Map();
+weaponStatsMap = new Map();
 try {
 const r = await fetch(CONFIG.DATA_FILES.weaponStats);
 if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -338,8 +339,33 @@ effect: item.ef_effect_1 != null ? Number(item.ef_effect_1) : 0,
 nameOption: s(item.ii_name_option),
 sprite,
 classFlags,
-// Weapon stats - use from weaponStatsMap if available, otherwise use from item data
-weaponStats: weaponStatsMap.get(id) || {
+// Weapon stats - smart lookup with fallback
+weaponStats: (() => {
+// Try exact ID first
+let stats = weaponStatsMap.get(id);
+if (stats) return stats;
+
+// If root ID (ending in 00), try base variant (ending in 10)
+if (id.endsWith('00')) {
+const baseId = id.slice(0, -2) + '10';
+stats = weaponStatsMap.get(baseId);
+if (stats) {
+console.log(`Using stats from ${baseId} for root ${id}`);
+return stats;
+}
+}
+
+// Try using first 5 digits to find any matching weapon
+const prefix = id.slice(0, 5);
+for (const [statId, statData] of weaponStatsMap.entries()) {
+if (statId.startsWith(prefix)) {
+console.log(`Using stats from ${statId} for ${id} (prefix match)`);
+return statData;
+}
+}
+
+// Fallback to item's own fields or zeros
+return {
 abilityA: item.wi_ability_a || 0,
 abilityB: item.wi_ability_b || 0,
 abilityC: item.wi_ability_c || 0,
@@ -349,7 +375,8 @@ damUpper: item.wi_dam_upper || 0,
 damUnder: item.wi_dam_under || 0,
 bulletCapacity: item.wi_bullet_capacity || 0,
 bulletTotal: item.wi_bullet_total || 0
-}
+};
+})()
 };
 });
 setStep('step-build','done'); setBar(100);
@@ -955,7 +982,30 @@ document.getElementById('weapon-modal-name').textContent = group.name;
 document.getElementById('weapon-modal-desc').textContent = group.desc || 'No description available.';
 // Build stats grid
 const labels = WEAPON_STAT_LABELS[group.category];
-const stats = weaponData.weaponStats || group.variants[0]?.weaponStats;
+// Try to get stats from variant, or lookup by root ID
+let stats = weaponData.weaponStats || group.variants[0]?.weaponStats;
+// If stats are all zeros or missing, try looking up by root ID
+if (!stats || (stats.abilityA === 0 && stats.abilityB === 0 && stats.abilityC === 0 && stats.abilityD === 0)) {
+const rootId = String(group.rootKey);
+stats = weaponStatsMap.get(rootId);
+if (!stats && rootId.endsWith('00')) {
+// Try base variant (ending in 10)
+const baseId = rootId.slice(0, -2) + '10';
+stats = weaponStatsMap.get(baseId);
+console.log(`Modal: Using stats from ${baseId} for root ${rootId}`, stats);
+}
+if (!stats) {
+// Try first 5 digit prefix match
+const prefix = rootId.slice(0, 5);
+for (const [statId, statData] of weaponStatsMap.entries()) {
+if (statId.startsWith(prefix)) {
+stats = statData;
+console.log(`Modal: Using stats from ${statId} for ${rootId} (prefix match)`, stats);
+break;
+}
+}
+}
+}
 if (stats && labels) {
 const statsGrid = document.getElementById('weapon-stats-grid');
 statsGrid.innerHTML = `
