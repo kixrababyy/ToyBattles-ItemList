@@ -116,7 +116,7 @@ ICON_EXT: '.png',
 ICONS_DIR: 'assets/icons/',
 DATA_FILES: {
 items:   'data/iteminfo.cdb.json',
-weapons: 'data/itemweaponsinfo.cdb.json',
+weapons: 'data/weaponinfo_cdb.json',
 icons:   'data/iconsinfo.cdb.json',
 banned:  'data/banned.json'
 }
@@ -205,13 +205,31 @@ itemsRaw = await r.json();
 } catch(e) { throw new Error(`iteminfo.cdb.json — ${e.message}`); }
 setStep('step-items','done'); setBar(40);
 setStep('step-weapons','active');
-let weaponsRaw = [];
+let weaponStatsMap = new Map();
 try {
 const r = await fetch(CONFIG.DATA_FILES.weapons);
 if (!r.ok) throw new Error(`HTTP ${r.status}`);
-weaponsRaw = await r.json();
+const weaponsRaw = await r.json();
+const weaponArr = Array.isArray(weaponsRaw) ? weaponsRaw : (weaponsRaw.items || weaponsRaw.data || []);
+// Create lookup map by weapon ID
+for (const weapon of weaponArr) {
+if (weapon.wi_id) {
+weaponStatsMap.set(String(weapon.wi_id), {
+abilityA: weapon.wi_ability_a || 0,
+abilityB: weapon.wi_ability_b || 0,
+abilityC: weapon.wi_ability_c || 0,
+abilityD: weapon.wi_ability_d || 0,
+damHead: weapon.wi_dam_head || 0,
+damUpper: weapon.wi_dam_upper || 0,
+damUnder: weapon.wi_dam_under || 0,
+bulletCapacity: weapon.wi_bullet_capacity || 0,
+bulletTotal: weapon.wi_bullet_total || 0
+});
+}
+}
+console.log('Weapon stats loaded:', weaponStatsMap.size);
 } catch(e) {
-console.warn('itemweaponsinfo.cdb.json not loaded:', e.message);
+console.warn('weaponinfo_cdb.json not loaded:', e.message);
 }
 setStep('step-weapons','done'); setBar(72);
 let iconsRaw = [];
@@ -242,11 +260,10 @@ const norm = v => Array.isArray(v) ? v
 : (v && Array.isArray(v.items)) ? v.items
 : (v ? [v] : []);
 const itemArr = norm(itemsRaw);
-const weaponArr = norm(weaponsRaw);
 const iconArr = norm(iconsRaw);
 const seen = new Set();
 const merged = [];
-for (const item of [...itemArr, ...weaponArr]) {
+for (const item of itemArr) {
 const key = String(item.ii_id ?? '');
 if (key && !seen.has(key)) { seen.add(key); merged.push(item); }
 }
@@ -309,8 +326,8 @@ effect: item.ef_effect_1 != null ? Number(item.ef_effect_1) : 0,
 nameOption: s(item.ii_name_option),
 sprite,
 classFlags,
-// Weapon stats (only for weapons)
-weaponStats: {
+// Weapon stats - use from weaponStatsMap if available, otherwise use from item data
+weaponStats: weaponStatsMap.get(id) || {
 abilityA: item.wi_ability_a || 0,
 abilityB: item.wi_ability_b || 0,
 abilityC: item.wi_ability_c || 0,
