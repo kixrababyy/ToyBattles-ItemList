@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>:root{--bg:#0b0d12;--bg2:#10131a;--bg3:#161a24;--surface:#1c2030;--surface2:#222638;--border:#253040;--border2:#344060;--text:#f0f4ff;--text2:#9ba8c8;--text3:#566080;--accent:#29ABE2;--accent2:#FFB800;--tb-blue:#29ABE2;--tb-gold:#FFB800;--tb-black:#111418;--radius:8px}[data-theme="light"]{--bg:#eef2f8;--bg2:#e0e6f0;--bg3:#d4dcea;--surface:#ffffff;--surface2:#edf1fa;--border:#c8d0e8;--border2:#adb8d8;--text:#111828;--text2:#3d4a70;--text3:#7a88a8;--accent:#29ABE2;--accent2:#e09000}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s}#loading-screen{position:fixed;inset:0;z-index:300;background:var(--bg);background-image:url('assets/background.webp');background-size:cover;background-position:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;transition:opacity .4s}#loading-screen::before{content:'';position:absolute;inset:0;background:rgba(10,12,18,.82);backdrop-filter:blur(4px)}#loading-screen>*{position:relative;z-index:1}#loading-screen.fade-out{opacity:0;pointer-events:none}.load-logo{display:flex;flex-direction:column;align-items:center;gap:14px}.load-logo img{height:100px;width:auto;filter:drop-shadow(0 0 20px rgba(41,171,226,.6));animation:logoFloat 3s ease-in-out infinite}.load-logo-text{font-family:'Bangers',cursive;font-size:28px;letter-spacing:2px;color:var(--text2)}@keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}.load-steps{display:flex;flex-direction:column;gap:10px;width:340px}.load-step{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--text3);transition:color .3s}.load-step.active{color:var(--text2)}.load-step.done{color:#6fcf82}.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border2);flex-shrink:0;transition:background .3s}.load-step.active .step-dot{background:var(--accent2);animation:pulse 1s infinite}.load-step.done .step-dot{background:#6fcf82}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}.load-bar-wrap{width:340px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}.load-bar{height:100%;width:0;background:linear-gradient(90deg,var(--tb-blue),var(--tb-gold));transition:width .4s ease;border-radius:2px}.load-error{color:#ff8888;font-size:14px;font-weight:600;text-align:center;max-width:340px;background:rgba(180,40,40,.25);border:1px solid rgba(255,100,100,.4);border-radius:8px;padding:10px 14px;display:none}.retry-btn{margin-top:10px;padding:8px 20px;background:var(--surface);border:1px solid var(--border2);color:var(--text);border-radius:var(--radius);cursor:pointer;font-size:13px;font-family:'Barlow',sans-serif;transition:border-color .2s;display:none}.retry-btn:hover{border-color:var(--accent2)}.site-hero{position:relative;overflow:hidden;background:#0a0c14;border-bottom:3px solid var(--tb-gold)}.site-hero-bg{position:absolute;inset:0;background-image:url('assets/background.webp');background-size:cover;background-position:center 30%;opacity:.28;filter:saturate(.7)}.site-hero-overlay{position:absolute;inset:0;background:linear-gradient(
 to bottom,rgba(10,12,20,.55) 0%,rgba(10,12,20,.82) 80%,rgba(10,12,20,1) 100%
-)}.site-hero-inner{position:relative;z-index:2;max-width:1600px;margin:0 auto;padding:22px 28px 18px;display:flex;align-items:center;gap:20px}.site-logo{height:72px;width:auto;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 2px 12px rgba(41,171,226,.35))}.site-title-block{display:flex;flex-direction:column;gap:2px}.site-title{font-family:'Bangers',cursive;font-size:38px;letter-spacing:2px;line-height:1;color:#fff;text-shadow:0 0 20px rgba(41,171,226,.5),2px 2px 0 rgba(0,0,0,.8)}.site-title .gold{color:var(--tb-gold)}.site-subtitle{font-family:'Nunito',sans-serif;font-size:12px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--tb-blue);opacity:.85}.hero-btn{display:inline-flex;align-items:center;gap:7px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 16px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,.85);transition:all .18s;white-space:nowrap;backdrop-filter:blur(6px);letter-spacing:.4px;text-transform:uppercase}.hero-btn svg{flex-shrink:0;transition:transform .35s}.hero-btn:hover{background:rgba(41,171,226,.22);border-color:var(--tb-blue);color:#fff}.hero-btn.reload-btn:hover svg{transform:rotate(180deg)}.hero-btn.theme-btn{gap:6px}.hero-btn.theme-btn:hover{background:rgba(255,184,0,.18);border-color:var(--tb-gold)}.variants-grid-drawer{display:none;margin-top:6px;border-top:1px solid var(--border);padding-top:8px;flex-wrap:wrap;gap:5px}.variants-grid-drawer.open{display:flex}.vc-chip{display:flex;flex-direction:row;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 8px;cursor:pointer;transition:border-color .12s,background .12s;min-width:0}.vc-chip:hover{border-color:var(--cat-color,var(--tb-blue));background:var(--surface2)}.vc-chip .chip-info{display:flex;flex-direction:column;gap:1px;min-width:0}.vc-chip .chip-label{font-size:10px;color:var(--text2);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}.stats-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:8px 24px}.stats-inner{max-width:1600px;margin:0 auto;display:flex;gap:24px;align-items:center;flex-wrap:wrap}.stat{display:flex;align-items:baseline;gap:6px}.stat-num{font-family:'Share Tech Mono',monospace;font-size:19px;font-weight:700;color:var(--accent2)}.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px}.controls{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 24px;position:sticky;top:0;z-index:90}.controls-inner{max-width:1600px;margin:0 auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.search-wrap{position:relative;flex:1;min-width:180px}.search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none}#search{width:100%;padding:7px 10px 7px 30px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'Nunito',sans-serif;font-size:13px;outline:none;transition:border-color .2s}#search:focus{border-color:var(--accent2)}#search::placeholder{color:var(--text3)}select{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:var(--radius);font-family:'Nunito',sans-serif;font-size:13px;padding:7px 10px;cursor:pointer;outline:none;transition:border-color .2s}select:hover,select:focus{border-color:var(--accent2)}option{background:var(--surface)}.view-toggle{display:flex;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}.view-btn{background:var(--surface);border:none;border-right:1px solid var(--border);color:var(--text2);padding:7px 12px;cursor:pointer;font-size:13px;transition:all .15s}.view-btn:last-child{border-right:none}.view-btn.active{background:var(--accent);color:#fff}.view-btn:hover:not(.active){background:var(--surface2)}.nav-wrap{position:sticky;top:46px;z-index:89}.main-tabs-row{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px}.main-tabs-inner{max-width:1600px;margin:0 auto;display:flex}.main-tab{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;letter-spacing:.6px;padding:14px 36px;background:transparent;border:none;color:var(--text3);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s,background .15s}.main-tab:hover{color:var(--text);background:var(--surface)}.main-tab.active{color:var(--text);background:var(--surface)}#tab-characters.active{border-bottom-color:#FF69B4;color:#FF69B4}#tab-weapons.active{border-bottom-color:#5aaa70;color:#5aaa70}#tab-other.active{border-bottom-color:var(--accent2);color:var(--text)}#tab-characters:hover{color:#FF69B4}#tab-weapons:hover{color:#5aaa70}.sub-tabs-row{background:var(--bg3);border-bottom:2px solid var(--border);padding:0 24px;overflow-x:auto;scrollbar-width:none}.sub-tabs-row::-webkit-scrollbar{display:none}.sub-tabs-inner{max-width:1600px;margin:0 auto;display:flex}.sub-tab{white-space:nowrap;font-family:'Nunito',sans-serif;font-size:13px;font-weight:500;padding:9px 20px;background:transparent;border:none;color:var(--text2);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;display:flex;align-items:center;gap:6px;transition:color .15s,border-color .15s,background .15s}.sub-tab:hover{color:var(--text);background:var(--surface)}.sub-tab.active{color:var(--text);background:var(--surface);border-bottom-color:var(--cat-color,var(--accent2))}.sub-tab-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.sub-tab-count{font-size:10px;opacity:.5}.content{max-width:1600px;margin:0 auto;padding:18px 24px}.grid-view{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}.item-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:transform .15s,box-shadow .15s,border-color .15s;cursor:default;contain:layout style;position:relative}.banned-ribbon{position:absolute;top:8px;right:8px;background:#7a1010;color:#ffaaaa;font-family:'Nunito',sans-serif;font-size:9px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;padding:3px 7px;border-radius:4px;border:1px solid #c03030;z-index:10;pointer-events:none;box-shadow:0 1px 6px rgba(0,0,0,.5)}.item-card:hover{transform:translateY(-2px);border-color:var(--cat-color,var(--border2));box-shadow:0 6px 20px rgba(0,0,0,.4),0 0 0 1px var(--cat-color,var(--accent))}.card-top-bar{height:3px;background:var(--cat-color,var(--accent))}.card-icon-wrap{display:flex;align-items:center;justify-content:center;height:110px;background:var(--bg3);border-bottom:1px solid var(--border);overflow:hidden}.card-icon{max-width:96px;max-height:96px;object-fit:contain;image-rendering:pixelated}.card-body{padding:11px 12px}.card-name{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;color:var(--text);line-height:1.3}.card-id-box{font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:var(--accent2);background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:4px 9px;cursor:pointer;transition:all .18s;letter-spacing:.3px;flex-shrink:0}.card-id-box:hover{border-color:var(--accent2);background:var(--surface2);color:#fff}.tbl-id{font-size:13px;padding:4px 9px;margin-bottom:0}.card-footer-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}.variants-toggle{width:100%;margin-top:6px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--text2);cursor:pointer;text-align:left;transition:background .15s,color .15s}.variants-toggle:hover{background:var(--surface2);color:var(--text)}.tbl-variant{display:inline-flex;align-items:center;gap:3px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:3px 7px;cursor:pointer;transition:border-color .15s,background .15s}.tbl-variant:hover{border-color:var(--accent2);background:var(--surface2)}.card-desc{font-size:11px;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px}.badge{font-size:9px;font-weight:600;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.4px}.badge-cat{color:#fff;background:var(--cat-color,var(--accent));filter:brightness(.85)}.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}table{width:100%;border-collapse:collapse;font-size:13px}thead tr{background:var(--surface2)}th{padding:10px 13px;text-align:left;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border);white-space:nowrap;user-select:none;cursor:pointer}th:hover{color:var(--text)}tbody tr{border-bottom:1px solid var(--border);transition:background .1s}tbody tr:last-child{border-bottom:none}tbody tr:hover{background:var(--surface2)}td{padding:8px 13px;color:var(--text);vertical-align:middle}td.td-icon{width:44px;padding:4px 8px;text-align:center}td.td-icon img{width:32px;height:32px;object-fit:contain;image-rendering:pixelated;display:block;margin:0 auto}td.td-icon .no-icon{width:28px;height:28px;border-radius:5px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text3);margin:0 auto}td.td-id{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);cursor:pointer;white-space:nowrap}td.td-id:hover{color:var(--accent2)}td.td-name{font-weight:500}td.td-file{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}td.td-desc{max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2);font-size:12px}.row-bar{display:inline-block;width:3px;height:13px;border-radius:2px;margin-right:7px;vertical-align:middle;background:var(--cat-color,var(--accent))}.empty{text-align:center;padding:70px 20px;color:var(--text3)}.empty svg{margin-bottom:14px;opacity:.35}.empty p{font-size:14px}.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:9px 18px;border-radius:22px;font-size:12px;z-index:999;opacity:0;transition:all .25s;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.4)}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--accent)}@media(max-width:640px){.content{padding:10px}.grid-view{grid-template-columns:repeat(2,1fr);gap:8px}.controls-inner{gap:6px}}@media(max-width:380px){.grid-view{grid-template-columns:1fr}}</style>
+)}.site-hero-inner{position:relative;z-index:2;max-width:1600px;margin:0 auto;padding:22px 28px 18px;display:flex;align-items:center;gap:20px}.site-logo{height:72px;width:auto;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 2px 12px rgba(41,171,226,.35))}.site-title-block{display:flex;flex-direction:column;gap:2px}.site-title{font-family:'Bangers',cursive;font-size:38px;letter-spacing:2px;line-height:1;color:#fff;text-shadow:0 0 20px rgba(41,171,226,.5),2px 2px 0 rgba(0,0,0,.8)}.site-title .gold{color:var(--tb-gold)}.site-subtitle{font-family:'Nunito',sans-serif;font-size:12px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--tb-blue);opacity:.85}.hero-btn{display:inline-flex;align-items:center;gap:7px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 16px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;color:rgba(255,255,255,.85);transition:all .18s;white-space:nowrap;backdrop-filter:blur(6px);letter-spacing:.4px;text-transform:uppercase}.hero-btn svg{flex-shrink:0;transition:transform .35s}.hero-btn:hover{background:rgba(41,171,226,.22);border-color:var(--tb-blue);color:#fff}.hero-btn.reload-btn:hover svg{transform:rotate(180deg)}.hero-btn.theme-btn{gap:6px}.hero-btn.theme-btn:hover{background:rgba(255,184,0,.18);border-color:var(--tb-gold)}.variants-grid-drawer{display:none;margin-top:6px;border-top:1px solid var(--border);padding-top:8px;flex-wrap:wrap;gap:5px}.variants-grid-drawer.open{display:flex}.vc-chip{display:flex;flex-direction:row;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 8px;cursor:pointer;transition:border-color .12s,background .12s;min-width:0}.vc-chip:hover{border-color:var(--cat-color,var(--tb-blue));background:var(--surface2)}.vc-chip .chip-info{display:flex;flex-direction:column;gap:1px;min-width:0}.vc-chip .chip-label{font-size:10px;color:var(--text2);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}.stats-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:8px 24px}.stats-inner{max-width:1600px;margin:0 auto;display:flex;gap:24px;align-items:center;flex-wrap:wrap}.stat{display:flex;align-items:baseline;gap:6px}.stat-num{font-family:'Share Tech Mono',monospace;font-size:19px;font-weight:700;color:var(--accent2)}.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px}.controls{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 24px;position:sticky;top:0;z-index:90}.controls-inner{max-width:1600px;margin:0 auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.search-wrap{position:relative;flex:1;min-width:180px}.search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none}#search{width:100%;padding:7px 10px 7px 30px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:'Nunito',sans-serif;font-size:13px;outline:none;transition:border-color .2s}#search:focus{border-color:var(--accent2)}#search::placeholder{color:var(--text3)}select{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:var(--radius);font-family:'Nunito',sans-serif;font-size:13px;padding:7px 10px;cursor:pointer;outline:none;transition:border-color .2s}select:hover,select:focus{border-color:var(--accent2)}option{background:var(--surface)}.view-toggle{display:flex;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}.view-btn{background:var(--surface);border:none;border-right:1px solid var(--border);color:var(--text2);padding:7px 12px;cursor:pointer;font-size:13px;transition:all .15s}.view-btn:last-child{border-right:none}.view-btn.active{background:var(--accent);color:#fff}.view-btn:hover:not(.active){background:var(--surface2)}.nav-wrap{position:sticky;top:46px;z-index:89}.main-tabs-row{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px}.main-tabs-inner{max-width:1600px;margin:0 auto;display:flex}.main-tab{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;letter-spacing:.6px;padding:14px 36px;background:transparent;border:none;color:var(--text3);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s,background .15s}.main-tab:hover{color:var(--text);background:var(--surface)}.main-tab.active{color:var(--text);background:var(--surface)}#tab-characters.active{border-bottom-color:#FF69B4;color:#FF69B4}#tab-weapons.active{border-bottom-color:#5aaa70;color:#5aaa70}#tab-other.active{border-bottom-color:var(--accent2);color:var(--text)}#tab-characters:hover{color:#FF69B4}#tab-weapons:hover{color:#5aaa70}.sub-tabs-row{background:var(--bg3);border-bottom:2px solid var(--border);padding:0 24px;overflow-x:auto;scrollbar-width:none}.sub-tabs-row::-webkit-scrollbar{display:none}.sub-tabs-inner{max-width:1600px;margin:0 auto;display:flex}.sub-tab{white-space:nowrap;font-family:'Nunito',sans-serif;font-size:13px;font-weight:500;padding:9px 20px;background:transparent;border:none;color:var(--text2);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;display:flex;align-items:center;gap:6px;transition:color .15s,border-color .15s,background .15s}.sub-tab:hover{color:var(--text);background:var(--surface)}.sub-tab.active{color:var(--text);background:var(--surface);border-bottom-color:var(--cat-color,var(--accent2))}.sub-tab-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.sub-tab-count{font-size:10px;opacity:.5}.content{max-width:1600px;margin:0 auto;padding:18px 24px}.grid-view{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}.item-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:transform .15s,box-shadow .15s,border-color .15s;cursor:default;contain:layout style;position:relative}.banned-ribbon{position:absolute;top:8px;right:8px;background:#7a1010;color:#ffaaaa;font-family:'Nunito',sans-serif;font-size:9px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;padding:3px 7px;border-radius:4px;border:1px solid #c03030;z-index:10;pointer-events:none;box-shadow:0 1px 6px rgba(0,0,0,.5)}.item-card:hover{transform:translateY(-2px);border-color:var(--cat-color,var(--border2));box-shadow:0 6px 20px rgba(0,0,0,.4),0 0 0 1px var(--cat-color,var(--accent))}.item-card[onclick]{cursor:pointer}.item-card[onclick]:hover{box-shadow:0 8px 24px rgba(0,0,0,.5),0 0 0 2px var(--cat-color,var(--accent));transform:translateY(-3px)}.card-top-bar{height:3px;background:var(--cat-color,var(--accent))}.card-icon-wrap{display:flex;align-items:center;justify-content:center;height:110px;background:var(--bg3);border-bottom:1px solid var(--border);overflow:hidden}.card-icon{max-width:96px;max-height:96px;object-fit:contain;image-rendering:pixelated}.card-body{padding:11px 12px}.card-name{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;color:var(--text);line-height:1.3}.card-id-box{font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:var(--accent2);background:var(--bg);border:1px solid var(--border2);border-radius:6px;padding:4px 9px;cursor:pointer;transition:all .18s;letter-spacing:.3px;flex-shrink:0}.card-id-box:hover{border-color:var(--accent2);background:var(--surface2);color:#fff}.tbl-id{font-size:13px;padding:4px 9px;margin-bottom:0}.card-footer-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}.variants-toggle{width:100%;margin-top:6px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--text2);cursor:pointer;text-align:left;transition:background .15s,color .15s}.variants-toggle:hover{background:var(--surface2);color:var(--text)}.tbl-variant{display:inline-flex;align-items:center;gap:3px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:3px 7px;cursor:pointer;transition:border-color .15s,background .15s}.tbl-variant:hover{border-color:var(--accent2);background:var(--surface2)}.card-desc{font-size:11px;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px}.badge{font-size:9px;font-weight:600;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.4px}.badge-cat{color:#fff;background:var(--cat-color,var(--accent));filter:brightness(.85)}.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}table{width:100%;border-collapse:collapse;font-size:13px}thead tr{background:var(--surface2)}th{padding:10px 13px;text-align:left;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border);white-space:nowrap;user-select:none;cursor:pointer}th:hover{color:var(--text)}tbody tr{border-bottom:1px solid var(--border);transition:background .1s}tbody tr:last-child{border-bottom:none}tbody tr:hover{background:var(--surface2)}td{padding:8px 13px;color:var(--text);vertical-align:middle}td.td-icon{width:44px;padding:4px 8px;text-align:center}td.td-icon img{width:32px;height:32px;object-fit:contain;image-rendering:pixelated;display:block;margin:0 auto}td.td-icon .no-icon{width:28px;height:28px;border-radius:5px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text3);margin:0 auto}td.td-id{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text3);cursor:pointer;white-space:nowrap}td.td-id:hover{color:var(--accent2)}td.td-name{font-weight:500}td.td-file{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text3);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}td.td-desc{max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2);font-size:12px}.row-bar{display:inline-block;width:3px;height:13px;border-radius:2px;margin-right:7px;vertical-align:middle;background:var(--cat-color,var(--accent))}.empty{text-align:center;padding:70px 20px;color:var(--text3)}.empty svg{margin-bottom:14px;opacity:.35}.empty p{font-size:14px}.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:9px 18px;border-radius:22px;font-size:12px;z-index:999;opacity:0;transition:all .25s;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.4)}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--accent)}@media(max-width:640px){.content{padding:10px}.grid-view{grid-template-columns:repeat(2,1fr);gap:8px}.controls-inner{gap:6px}}@media(max-width:380px){.grid-view{grid-template-columns:1fr}}.weapon-modal{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.85);backdrop-filter:blur(4px);overflow-y:auto;padding:20px}.weapon-modal.open{display:flex;align-items:center;justify-content:center}.weapon-modal-content{background:var(--surface);border:2px solid var(--border2);border-radius:12px;max-width:900px;width:100%;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 10px 40px rgba(0,0,0,.6)}.weapon-modal-close{position:absolute;top:16px;right:16px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-size:24px;width:36px;height:36px;border-radius:50%;cursor:pointer;transition:all .2s;z-index:10;display:flex;align-items:center;justify-content:center;line-height:1}.weapon-modal-close:hover{background:var(--accent2);border-color:var(--accent2);color:#fff;transform:rotate(90deg)}.weapon-modal-body{padding:24px}.weapon-display{text-align:center;border-bottom:2px solid var(--border);padding-bottom:20px;margin-bottom:20px}.weapon-image-container{min-height:200px;display:flex;align-items:center;justify-content:center;background:var(--bg3);border-radius:8px;padding:20px;margin-bottom:16px}.weapon-name{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:var(--text);margin-bottom:8px}.weapon-desc{color:var(--text2);font-size:14px;line-height:1.6}.weapon-stats-title{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--text);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--border)}.weapon-stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}.weapon-stat-item{background:var(--bg3);padding:12px;border-radius:6px;border:1px solid var(--border)}.weapon-stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}.weapon-stat-value{font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:var(--accent2)}.weapon-damage-section,.weapon-ammo-section{margin-top:16px;padding:12px;background:var(--bg2);border-radius:6px;border:1px solid var(--border)}.weapon-damage-title,.weapon-ammo-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;text-transform:uppercase;letter-spacing:.6px}.weapon-damage-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.weapon-damage-item{text-align:center}.weapon-damage-label{font-size:10px;color:var(--text3);margin-bottom:2px}.weapon-damage-value{font-family:'Share Tech Mono',monospace;font-size:16px;font-weight:700;color:var(--accent)}.weapon-ammo-info{display:flex;align-items:center;gap:12px;font-family:'Share Tech Mono',monospace;font-size:16px;color:var(--text)}.weapon-ammo-capacity{color:var(--accent2);font-weight:700}.weapon-ammo-separator{color:var(--text3)}.weapon-ammo-total{color:var(--accent);font-weight:700}.weapon-variants-title{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--text);margin:20px 0 12px;padding-top:20px;border-top:2px solid var(--border)}.weapon-variant-selectors{background:var(--bg3);padding:16px;border-radius:8px;border:1px solid var(--border)}.variant-selector-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}.variant-selector-row label{font-size:13px;font-weight:600;color:var(--text);min-width:120px}.variant-selector-row select{flex:1;background:var(--surface);border:1px solid var(--border2);color:var(--text);padding:8px 12px;border-radius:6px;font-size:13px;cursor:pointer;transition:border-color .2s}.variant-selector-row select:hover,.variant-selector-row select:focus{border-color:var(--accent2)}.variant-result{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface);border-radius:6px;border:1px solid var(--border2);margin-top:12px}.variant-result-label{font-size:13px;font-weight:600;color:var(--text)}.variant-result-id{font-family:'Share Tech Mono',monospace;font-size:18px;font-weight:700;color:var(--accent2);flex:1}.variant-copy-btn{background:var(--accent);border:none;color:#fff;padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:.5px}.variant-copy-btn:hover:not(:disabled){background:var(--accent2);transform:translateY(-1px)}.variant-copy-btn:disabled{opacity:.4;cursor:not-allowed}@media(max-width:640px){.weapon-modal-content{max-width:100%;margin:10px}.weapon-stats-grid{grid-template-columns:1fr}.weapon-damage-grid{grid-template-columns:1fr}}</style>
 </head>
 <body>
 <div id="loading-screen">
@@ -308,7 +308,19 @@ characters,
 effect: item.ef_effect_1 != null ? Number(item.ef_effect_1) : 0,
 nameOption: s(item.ii_name_option),
 sprite,
-classFlags
+classFlags,
+// Weapon stats (only for weapons)
+weaponStats: {
+abilityA: item.wi_ability_a || 0,
+abilityB: item.wi_ability_b || 0,
+abilityC: item.wi_ability_c || 0,
+abilityD: item.wi_ability_d || 0,
+damHead: item.wi_dam_head || 0,
+damUpper: item.wi_dam_upper || 0,
+damUnder: item.wi_dam_under || 0,
+bulletCapacity: item.wi_bullet_capacity || 0,
+bulletTotal: item.wi_bullet_total || 0
+}
 };
 });
 setStep('step-build','done'); setBar(100);
@@ -505,7 +517,16 @@ map.set(key, { rootKey: key, name: '', desc: '', category: item.category, charac
 const g = map.get(key);
 if (Number(item.id) === key) { g.name = item.name; g.desc = item.desc; g.sprite = item.sprite; g.characters = item.characters || []; }
 if (!g.sprite && item.sprite) g.sprite = item.sprite;
-g.variants.push({ id: item.id, duration: item.duration, upgrade: item.upgrade, name: item.name, category: item.category, effect: item.effect || 0, nameOption: item.nameOption || '' });
+g.variants.push({ 
+id: item.id, 
+duration: item.duration, 
+upgrade: item.upgrade, 
+name: item.name, 
+category: item.category, 
+effect: item.effect || 0, 
+nameOption: item.nameOption || '',
+weaponStats: item.weaponStats
+});
 }
 for (const g of map.values()) {
 if (!g.name) { g.name = g.variants[0].name; g.desc = g.variants[0].desc || ''; }
@@ -635,6 +656,15 @@ if (idx < groups.length) requestAnimationFrame(paint);
 paint();
 }
 const WEAPON_CATS = new Set(['Melee','Rifle','Shotgun','Sniper','MicroGun','Bazooka','Grenade Launcher']);
+const WEAPON_STAT_LABELS = {
+'Melee': {a: 'Power', b: 'Range', c: 'Run Speed', d: 'Secondary Power'},
+'Rifle': {a: 'Power', b: 'Firing Rate', c: 'Accuracy', d: 'Reload Speed'},
+'Shotgun': {a: 'Power', b: 'Firing Rate', c: 'Accuracy', d: 'Reload Speed'},
+'Sniper': {a: 'Power', b: 'Firing Rate', c: 'Zoom Speed', d: 'Reload Speed'},
+'MicroGun': {a: 'Power', b: 'Warm Up Time', c: 'Run Speed', d: 'Accuracy'},
+'Bazooka': {a: 'Power', b: 'Firing Rate', c: 'Blast Radius', d: 'Bullet Speed'},
+'Grenade Launcher': {a: 'Power', b: 'Firing Rate', c: 'Blast Radius', d: 'Reload Speed'}
+};
 const CHAR_UPGRADE_MAP = {
 '0': 'Unlimited - Run Speed',
 '1': 'Unlimited - Health',
@@ -725,6 +755,7 @@ const deduped = dedupeVariants(group.variants);
 const uCount = deduped.length;
 const chipsHtml = uCount > 1 ? buildVariantChips(group, deduped, color) : '';
 const isBanned = bannedIds.has(rootId) || group.variants.some(v => bannedIds.has(String(v.id)));
+const isWeapon = WEAPON_CATS.has(group.category);
 
 // Build character pills or fallback to category badge
 let badgeHtml = '';
@@ -741,7 +772,9 @@ return `<span class="badge badge-cat" style="--cat-color:${charColor}">${esc(cha
 badgeHtml = `<span class="badge badge-cat" style="--cat-color:${color}">${esc(group.category)}</span>`;
 }
 
-return `<div class="item-card" data-gid="${gid}" style="--cat-color:${color}">` +
+const cardClick = isWeapon ? `onclick="openWeaponModal(${gid})" style="cursor:pointer"` : '';
+
+return `<div class="item-card" data-gid="${gid}" style="--cat-color:${color}" ${cardClick}>` +
 (isBanned ? `<div class="banned-ribbon">⛔ Banned Item</div>` : '') +
 `<div class="card-top-bar"></div>` +
 `<div class="card-icon-wrap">${iconHtml(group,'card')}</div>` +
@@ -750,7 +783,7 @@ return `<div class="item-card" data-gid="${gid}" style="--cat-color:${color}">` 
 (group.desc ? `<div class="card-desc">${esc(group.desc)}</div>` : '') +
 `<div class="card-footer-row">` +
 badgeHtml +
-`<div class="card-id-box" onclick="copyId('${rootId}')" title="Click to copy root ID">${esc(rootId)}</div>` +
+`<div class="card-id-box" onclick="copyId('${rootId}');event.stopPropagation()" title="Click to copy root ID">${esc(rootId)}</div>` +
 `</div>` +
 (uCount > 1 ?
 `<button class="variants-toggle" data-gid="${gid}" data-open="0" onclick="toggleVariants('${gid}',this);event.stopPropagation()">` +
@@ -878,6 +911,177 @@ return String(s)
 .replace(/&/g,'&amp;').replace(/</g,'&lt;')
 .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+let currentWeaponGroup = null;
+function openWeaponModal(gid) {
+const group = familyGroups[gid];
+if (!group || !WEAPON_CATS.has(group.category)) return;
+currentWeaponGroup = group;
+const modal = document.getElementById('weapon-modal');
+const weaponData = group.variants[0]; // Use first variant for base stats
+// Set weapon image
+const imgContainer = document.getElementById('weapon-modal-image');
+imgContainer.innerHTML = iconHtml(group, 'card');
+// Set weapon name and description
+document.getElementById('weapon-modal-name').textContent = group.name;
+document.getElementById('weapon-modal-desc').textContent = group.desc || 'No description available.';
+// Build stats grid
+const labels = WEAPON_STAT_LABELS[group.category];
+const stats = weaponData.weaponStats || group.variants[0]?.weaponStats;
+if (stats && labels) {
+const statsGrid = document.getElementById('weapon-stats-grid');
+statsGrid.innerHTML = `
+<div class="weapon-stat-item">
+<div class="weapon-stat-label">${labels.a}</div>
+<div class="weapon-stat-value">${stats.abilityA}</div>
+</div>
+<div class="weapon-stat-item">
+<div class="weapon-stat-label">${labels.b}</div>
+<div class="weapon-stat-value">${stats.abilityB}</div>
+</div>
+<div class="weapon-stat-item">
+<div class="weapon-stat-label">${labels.c}</div>
+<div class="weapon-stat-value">${stats.abilityC}</div>
+</div>
+<div class="weapon-stat-item">
+<div class="weapon-stat-label">${labels.d}</div>
+<div class="weapon-stat-value">${stats.abilityD}</div>
+</div>
+`;
+// Damage section
+const damageSection = document.getElementById('weapon-damage-section');
+if (stats.damHead || stats.damUpper || stats.damUnder) {
+damageSection.innerHTML = `
+<div class="weapon-damage-title">Damage</div>
+<div class="weapon-damage-grid">
+<div class="weapon-damage-item">
+<div class="weapon-damage-label">Head</div>
+<div class="weapon-damage-value">${stats.damHead}</div>
+</div>
+<div class="weapon-damage-item">
+<div class="weapon-damage-label">Upper</div>
+<div class="weapon-damage-value">${stats.damUpper}</div>
+</div>
+<div class="weapon-damage-item">
+<div class="weapon-damage-label">Lower</div>
+<div class="weapon-damage-value">${stats.damUnder}</div>
+</div>
+</div>
+`;
+damageSection.style.display = 'block';
+} else {
+damageSection.style.display = 'none';
+}
+// Ammo section
+const ammoSection = document.getElementById('weapon-ammo-section');
+if (stats.bulletCapacity || stats.bulletTotal) {
+const totalBullets = stats.bulletCapacity + stats.bulletTotal;
+ammoSection.innerHTML = `
+<div class="weapon-ammo-title">Ammunition</div>
+<div class="weapon-ammo-info">
+<span class="weapon-ammo-capacity">${stats.bulletCapacity}</span>
+<span class="weapon-ammo-separator">/</span>
+<span class="weapon-ammo-total">${stats.bulletTotal}</span>
+<span class="weapon-ammo-separator">=</span>
+<span style="color:var(--text2)">${totalBullets} total</span>
+</div>
+`;
+ammoSection.style.display = 'block';
+} else {
+ammoSection.style.display = 'none';
+}
+}
+// Populate upgrade type dropdown
+const upgradeConfig = UPGRADE_CONFIG[group.category];
+const typeSelect = document.getElementById('variant-upgrade-type');
+typeSelect.innerHTML = '<option value="">Select Type</option>';
+if (upgradeConfig) {
+Object.keys(upgradeConfig).forEach(key => {
+typeSelect.innerHTML += `<option value="${key}">${upgradeConfig[key]}</option>`;
+});
+}
+// Reset variant selection
+document.getElementById('variant-upgrade-level').value = '0';
+document.getElementById('variant-result-id').textContent = '-';
+document.getElementById('variant-copy-btn').disabled = true;
+modal.classList.add('open');
+}
+function closeWeaponModal() {
+document.getElementById('weapon-modal').classList.remove('open');
+currentWeaponGroup = null;
+}
+function updateVariantID() {
+if (!currentWeaponGroup) return;
+const typeSelect = document.getElementById('variant-upgrade-type');
+const levelSelect = document.getElementById('variant-upgrade-level');
+const tensDigit = typeSelect.value;
+const onesDigit = levelSelect.value;
+if (!tensDigit) {
+document.getElementById('variant-result-id').textContent = '-';
+document.getElementById('variant-copy-btn').disabled = true;
+return;
+}
+// Calculate variant ID: rootKey + tensDigit + onesDigit
+const baseID = currentWeaponGroup.rootKey;
+const variantID = baseID + parseInt(tensDigit + onesDigit, 10);
+document.getElementById('variant-result-id').textContent = variantID;
+document.getElementById('variant-copy-btn').disabled = false;
+}
+function copyVariantID() {
+const idText = document.getElementById('variant-result-id').textContent;
+if (idText === '-') return;
+navigator.clipboard.writeText(idText).then(() => {
+showToast('Item ID copied: ' + idText);
+});
+}
 loadAllData();</script>
+<div id="weapon-modal" class="weapon-modal" onclick="if(event.target===this) closeWeaponModal()">
+<div class="weapon-modal-content">
+<button class="weapon-modal-close" onclick="closeWeaponModal()">✕</button>
+<div class="weapon-modal-body">
+<div class="weapon-display">
+<div class="weapon-image-container" id="weapon-modal-image"></div>
+<h2 class="weapon-name" id="weapon-modal-name"></h2>
+<p class="weapon-desc" id="weapon-modal-desc"></p>
+</div>
+<div class="weapon-stats-panel">
+<h3 class="weapon-stats-title">Weapon Stats</h3>
+<div class="weapon-stats-grid" id="weapon-stats-grid"></div>
+<div class="weapon-damage-section" id="weapon-damage-section"></div>
+<div class="weapon-ammo-section" id="weapon-ammo-section"></div>
+</div>
+<div class="weapon-variants-section">
+<h3 class="weapon-variants-title">Select Upgrade</h3>
+<div class="weapon-variant-selectors">
+<div class="variant-selector-row">
+<label>Upgrade Type:</label>
+<select id="variant-upgrade-type" onchange="updateVariantID()">
+<option value="">Select Type</option>
+</select>
+</div>
+<div class="variant-selector-row">
+<label>Upgrade Level:</label>
+<select id="variant-upgrade-level" onchange="updateVariantID()">
+<option value="0">Level 0</option>
+<option value="1">Level 1</option>
+<option value="2">Level 2</option>
+<option value="3">Level 3</option>
+<option value="4">Level 4</option>
+<option value="5">Level 5</option>
+<option value="6">Level 6</option>
+<option value="7">Level 7</option>
+<option value="8">Level 8</option>
+<option value="9">Level 9</option>
+</select>
+</div>
+<div class="variant-result">
+<span class="variant-result-label">Item ID:</span>
+<span class="variant-result-id" id="variant-result-id">-</span>
+<button class="variant-copy-btn" onclick="copyVariantID()" id="variant-copy-btn" disabled>Copy ID</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 </body>
 </html>
