@@ -277,10 +277,15 @@ h: item.ii_class_h || 0,
 i: item.ii_class_i || 0
 };
 const catResult = determineCategory(s(item.ii_meshfilename), classFlags);
-const category = catResult.category;
-const characters = catResult.characters;
+let category = catResult.category;
+let characters = catResult.characters;
 const upgrade = determineUpgrade(item.ii_id, category);
 const name = s(item.ii_name);
+// Override category for invalid/placeholder names
+if (name.includes('????')) {
+category = 'Other Items';
+characters = [];
+}
 const iconKey = [item.ii_iconsmall, item.ii_icon, item.ii_id]
 .filter(v => v != null)
 .map(String)
