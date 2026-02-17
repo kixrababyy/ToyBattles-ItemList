@@ -809,13 +809,21 @@ i.file.toLowerCase().includes(q)
 if (tag) {
 const tagObj = tagData.find(t => t.name === tag);
 if (tagObj) {
-// Find all root keys where at least one variant matches the tag
-const matchingRoots = new Set();
+// Build a map of rootKey → all item IDs in that family (from current filtered items)
+const rootToIds = new Map();
 items.forEach(i => {
-if (tagObj.ids.has(String(i.id))) {
-matchingRoots.add(i.rootKey);
-}
+if (!rootToIds.has(i.rootKey)) rootToIds.set(i.rootKey, []);
+rootToIds.get(i.rootKey).push(String(i.id));
 });
+
+// Find root families where at least one tagged ID actually exists in that family
+const matchingRoots = new Set();
+for (const [rootKey, ids] of rootToIds) {
+if (ids.some(id => tagObj.ids.has(id))) {
+matchingRoots.add(rootKey);
+}
+}
+
 // Include ALL items from matching root families
 items = items.filter(i => matchingRoots.has(i.rootKey));
 }
