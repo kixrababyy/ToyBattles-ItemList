@@ -298,7 +298,10 @@ if (Array.isArray(tagsRaw)) {
 for (const tag of tagsRaw) {
 if (!tag.name || !Array.isArray(tag.ids)) continue;
 const idSet = new Set(tag.ids.map(String));
-tagData.push({ name: tag.name, color: tag.color || '#888', ids: idSet });
+// Sanitize color - strip any extra leading # characters
+const rawColor = tag.color || '#888888';
+const color = '#' + rawColor.replace(/^#+/, '');
+tagData.push({ name: tag.name, color, ids: idSet });
 for (const id of idSet) {
 if (!tagMap.has(id)) tagMap.set(id, []);
 tagMap.get(id).push(tag.name);
@@ -413,7 +416,7 @@ i: item.ii_class_i || 0
 const catResult = determineCategory(s(item.ii_meshfilename), classFlags, item.ii_type, item.ii_type_inven);
 let category = catResult.category;
 let characters = catResult.characters;
-const upgrade = determineUpgrade(item.ii_id, category);
+const upgrade = determineUpgrade(item.ii_id, category, item.ii_limited_time);
 const name = s(item.ii_name);
 // Override category for invalid/placeholder names
 if (name.includes('????')) {
@@ -543,19 +546,30 @@ if (folderIs('guy')) return { category: 'Kai', characters: ['Kai'] };
 
 return { category: 'Other Items', characters: [] };
 }
-function determineUpgrade(itemId, category) {
+function determineUpgrade(itemId, category, limitedTime) {
 const idStr = String(itemId ?? '');
-// Check for Unlimited items first (has upgrade config)
+const isWeapon = WEAPON_CATS.has(category);
+
+// For clothing and accessories: IGNORE ii_upgradable entirely
+// Only use ii_limited_time to determine unlimited status
+if (!isWeapon) {
+// ii_limited_time === 0 means the item is unlimited/permanent
+if (limitedTime === 0 || limitedTime === '0') return 'Unlimited';
+return 'Not unlimited/Not Upgradable';
+}
+
+// WEAPONS ONLY — use digit-based detection
+// Check for Unlimited weapons first (tens digit in UPGRADE_CONFIG)
 const ups = UPGRADE_CONFIG[category];
 if (ups && idStr.length >= 2) {
-const tensDigit = idStr.slice(-2, -1); // Second-to-last digit
-const onesDigit = idStr.slice(-1); // Last digit
+const tensDigit = idStr.slice(-2, -1);
+const onesDigit = idStr.slice(-1);
 const upgradeType = ups[tensDigit];
 if (upgradeType) {
 return `Unlimited - ${upgradeType} Level ${onesDigit}`;
 }
 }
-// Then check for regular upgradable items (50-59 range)
+// Check for regular upgradable weapons (50-59 range)
 if (idStr.length >= 2) {
 const lastTwo = parseInt(idStr.slice(-2), 10);
 if (lastTwo >= 50 && lastTwo <= 59) return 'Upgradable';
@@ -1304,8 +1318,14 @@ tensMap.forEach((label, tensDigit) => {
 typeSelect.innerHTML += '<option value="' + esc(tensDigit) + '">' + esc(label) + '</option>';
 });
 }
-// Reset selections
-document.getElementById('clothing-upgrade-level').value = '0';
+// Reset selections — level dropdown will be populated when type is chosen
+const levelSelect = document.getElementById('clothing-upgrade-level');
+levelSelect.innerHTML = '<option value="">Select Level</option>';
+levelSelect.disabled = true;
+document.getElementById('clothing-upgrade-type').onchange = function() {
+updateClothingLevels();
+updateClothingID();
+};
 document.getElementById('clothing-result-id').textContent = '-';
 document.getElementById('clothing-result-id').style.color = 'var(--accent2)';
 document.getElementById('clothing-copy-btn').disabled = true;
@@ -1319,6 +1339,48 @@ function closeClothingBackdrop(event) {
 if (event.target === event.currentTarget) {
 closeClothingModal();
 }
+}
+function updateClothingLevels() {
+if (!currentClothingGroup) return;
+const typeSelect = document.getElementById('clothing-upgrade-type');
+const levelSelect = document.getElementById('clothing-upgrade-level');
+const tensDigit = typeSelect.value;
+
+if (!tensDigit) {
+levelSelect.innerHTML = '<option value="">Select Level</option>';
+levelSelect.disabled = true;
+return;
+}
+
+// Find all variants with this tens digit and collect their ones digits
+const rootStr = String(currentClothingGroup.rootKey);
+const baseId = rootStr.slice(0, -2);
+const onesDigits = [];
+currentClothingGroup.variants.forEach(v => {
+const idStr = String(v.id);
+const tens = idStr.slice(-2, -1);
+const ones = idStr.slice(-1);
+if (tens === tensDigit) {
+onesDigits.push(ones);
+}
+});
+
+onesDigits.sort((a, b) => Number(a) - Number(b));
+
+if (onesDigits.length === 0) {
+levelSelect.innerHTML = '<option value="">No levels found</option>';
+levelSelect.disabled = true;
+return;
+}
+
+const levelLabels = {
+'0': 'Level 0 (Base)', '1': 'Level 1', '2': 'Level 2',
+'3': 'Level 3', '4': 'Level 4', '5': 'Level 5',
+'6': 'Level 6', '7': 'Level 7', '8': 'Level 8', '9': 'Level 9'
+};
+levelSelect.innerHTML = '<option value="">Select Level</option>' +
+onesDigits.map(d => `<option value="${d}">${levelLabels[d] || 'Level ' + d}</option>`).join('');
+levelSelect.disabled = false;
 }
 function updateClothingID() {
 if (!currentClothingGroup) return;
@@ -1486,17 +1548,8 @@ loadAllData();</script>
 </div>
 <div class="variant-selector-row">
 <label>Upgrade Level:</label>
-<select id="clothing-upgrade-level" onchange="updateClothingID()">
-<option value="0">Level 0 (Base)</option>
-<option value="1">Level 1</option>
-<option value="2">Level 2</option>
-<option value="3">Level 3</option>
-<option value="4">Level 4</option>
-<option value="5">Level 5</option>
-<option value="6">Level 6</option>
-<option value="7">Level 7</option>
-<option value="8">Level 8</option>
-<option value="9">Level 9</option>
+<select id="clothing-upgrade-level" onchange="updateClothingID()" disabled>
+<option value="">Select Level</option>
 </select>
 </div>
 <div class="variant-result">
