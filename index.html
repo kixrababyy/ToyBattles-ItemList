@@ -1328,28 +1328,41 @@ Object.keys(upgradeConfig).forEach(key => {
 typeSelect.innerHTML += '<option value="' + key + '">' + upgradeConfig[key] + '</option>';
 });
 } else {
-// For accessories/clothing, detect stat types from variants
-const statTypes = new Set();
+// For accessories/clothing: scan actual variants to find what "tens digits" exist
+// Root ID ends in 00; variants look like root + tensDigit + onesDigit
+// e.g. rootKey=6722100, variant 6722150 → tens='5', ones='0'
+const rootStr = String(group.rootKey);
+const baseId = rootStr.slice(0, -2); // everything except last 2 digits
+
+// Build a map of tensDigit → label, based on real variants
+const tensMap = new Map(); // tensDigit → display label
 group.variants.forEach(v => {
+const idStr = String(v.id);
+if (idStr.length < 2) return;
+const tens = idStr.slice(-2, -1);
+const ones = idStr.slice(-1);
+if (tens === '0' && ones === '0') return; // skip the root itself
+if (tensMap.has(tens)) return; // already have a label for this digit
+
+// Determine label from stat type
 const statType = determineStatType(v.effect, v.nameOption);
 if (statType) {
-statTypes.add(statType);
+tensMap.set(tens, statType);
+} else {
+// Fallback: label by duration if available
+tensMap.set(tens, v.duration || ('Type ' + tens));
 }
 });
 
-// Add stat types as upgrade options
-if (statTypes.size > 0) {
-let typeIndex = 0;
-statTypes.forEach(statType => {
-// Use a simple index as the value
-typeSelect.innerHTML += '<option value="stat' + typeIndex + '">' + esc(statType) + '</option>';
-typeIndex++;
+// Add each unique type as an option, value = the actual tens digit
+tensMap.forEach((label, tensDigit) => {
+typeSelect.innerHTML += '<option value="' + esc(tensDigit) + '">' + esc(label) + '</option>';
 });
-}
 }
 // Reset selections
 document.getElementById('clothing-upgrade-level').value = '0';
 document.getElementById('clothing-result-id').textContent = '-';
+document.getElementById('clothing-result-id').style.color = 'var(--accent2)';
 document.getElementById('clothing-copy-btn').disabled = true;
 modal.classList.add('open');
 }
@@ -1367,41 +1380,65 @@ if (!currentClothingGroup) return;
 const durationSelect = document.getElementById('clothing-duration');
 const typeSelect = document.getElementById('clothing-upgrade-type');
 const levelSelect = document.getElementById('clothing-upgrade-level');
+const resultEl = document.getElementById('clothing-result-id');
+const copyBtn = document.getElementById('clothing-copy-btn');
+
 const selectedDuration = durationSelect.value;
-const tensDigit = typeSelect.value;
-const onesDigit = levelSelect.value;
-// Find matching variant
-let matchingVariant = null;
-// If duration is selected, find by duration
-if (selectedDuration) {
-matchingVariant = currentClothingGroup.variants.find(v => v.duration === selectedDuration);
-}
-// If upgrade type and level are selected, calculate ID
-if (tensDigit && onesDigit) {
-const rootId = String(currentClothingGroup.rootKey);
-if (rootId.length >= 2) {
-const baseId = rootId.slice(0, -2);
-const newId = baseId + tensDigit + onesDigit;
-matchingVariant = currentClothingGroup.variants.find(v => String(v.ii_id) === newId);
-if (!matchingVariant) {
-// ID doesn't exist in variants, but show it anyway
-document.getElementById('clothing-result-id').textContent = newId;
-document.getElementById('clothing-copy-btn').disabled = false;
+const tensDigit = typeSelect.value;    // actual digit from variant ID (e.g. '5')
+const onesDigit = levelSelect.value;  // level digit (e.g. '0')
+
+// Need at least one selection to calculate
+if (!selectedDuration && !tensDigit) {
+resultEl.textContent = '-';
+copyBtn.disabled = true;
 return;
 }
+
+// Build the candidate ID from root + tensDigit + onesDigit
+const rootStr = String(currentClothingGroup.rootKey);
+const baseId = rootStr.slice(0, -2); // strip last 2 digits
+const candidateId = tensDigit
+? baseId + tensDigit + onesDigit
+: null;
+
+// Try to find a matching real variant
+let match = null;
+if (candidateId) {
+match = currentClothingGroup.variants.find(v => String(v.id) === candidateId);
+} else if (selectedDuration) {
+// No type selected — match on duration only
+match = currentClothingGroup.variants.find(v => v.duration === selectedDuration);
 }
+
+// Additional filter by duration if both are selected
+if (match && selectedDuration && match.duration !== selectedDuration) {
+// Try to find one that matches both
+const bothMatch = currentClothingGroup.variants.find(v =>
+String(v.id) === candidateId && v.duration === selectedDuration
+);
+if (bothMatch) match = bothMatch;
 }
-if (matchingVariant) {
-document.getElementById('clothing-result-id').textContent = matchingVariant.ii_id;
-document.getElementById('clothing-copy-btn').disabled = false;
-} else if (!selectedDuration && (!tensDigit || !onesDigit)) {
-document.getElementById('clothing-result-id').textContent = '-';
-document.getElementById('clothing-copy-btn').disabled = true;
+
+if (match) {
+resultEl.textContent = match.id;
+resultEl.style.color = 'var(--accent2)'; // Gold — valid ID
+copyBtn.disabled = false;
+} else if (candidateId) {
+// ID doesn't exist in real data — show it but flag as unverified
+resultEl.textContent = candidateId + ' ⚠ Not found';
+resultEl.style.color = '#ff8c42'; // Orange — warning
+copyBtn.disabled = true;
+} else {
+resultEl.textContent = '-';
+resultEl.style.color = 'var(--accent2)';
+copyBtn.disabled = true;
 }
 }
 function copyClothingID() {
-const id = document.getElementById('clothing-result-id').textContent;
-if (id && id !== '-') {
+const text = document.getElementById('clothing-result-id').textContent;
+// Only copy if it's a clean numeric ID (no warning suffix)
+const id = text.split(' ')[0];
+if (id && id !== '-' && !isNaN(id)) {
 copyId(id);
 }
 }

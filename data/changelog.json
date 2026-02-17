@@ -30,7 +30,7 @@
       "changes": [
         {
           "type": "added",
-          "text": "Weapon stats modal with detailed abilities, damage, and ammunition info"
+          "text": "Weapon stats GUI with easy to read Upgrade tab."
         },
         {
           "type": "added",
@@ -47,10 +47,6 @@
         {
           "type": "improved",
           "text": "Performance optimization"
-        },
-        {
-          "type": "added",
-          "text": "Weapons now show stats for each items"
         }
       ]
     },
