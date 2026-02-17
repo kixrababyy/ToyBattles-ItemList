@@ -1295,23 +1295,18 @@ Object.keys(upgradeConfig).forEach(key => {
 typeSelect.innerHTML += `<option value="${key}">${upgradeConfig[key]}</option>`;
 });
 }
-// Populate duration dropdown from unlimited variants only
+// Populate duration dropdown from ALL variants (not just unlimited)
 const durSelect = document.getElementById('variant-duration');
-const durMap = new Map(); // duration label → tens digits that produce it
-if (upgradeConfig) {
+const durMap = new Map(); // duration label → Set of variant IDs with that duration
 group.variants.forEach(v => {
-const idStr = String(v.id);
-const tens = idStr.slice(-2, -1);
-if (!upgradeConfig[tens]) return; // only unlimited variants
-const dur = (v.duration || 'Unlimited').trim();
-if (!dur.includes('?')) {
-if (!durMap.has(dur)) durMap.set(dur, []);
-durMap.get(dur).push(tens);
+const dur = (v.duration || 'Permanent').trim();
+if (!dur.includes('?') && !dur.toLowerCase().includes('package')) {
+if (!durMap.has(dur)) durMap.set(dur, new Set());
+durMap.get(dur).add(String(v.id));
 }
 });
-}
 durSelect.innerHTML = '<option value="">Select Duration</option>' +
-[...durMap.keys()].map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('');
+[...durMap.keys()].sort().map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('');
 // Reset variant selection
 document.getElementById('variant-duration').value = '';
 document.getElementById('variant-upgrade-level').value = '0';
@@ -1532,26 +1527,36 @@ const onesDigit = document.getElementById('variant-upgrade-level').value;
 const resultEl = document.getElementById('variant-result-id');
 const copyBtn = document.getElementById('variant-copy-btn');
 
+// Need at least upgrade type to search
 if (!tensDigit) {
 resultEl.textContent = '-';
+resultEl.style.color = 'var(--accent2)';
 copyBtn.disabled = true;
 return;
 }
 
-const baseID = String(currentWeaponGroup.rootKey);
-const baseId = baseID.slice(0, -2);
-const candidateId = baseId + tensDigit + onesDigit;
+// Find matching variant by filtering
+let candidates = currentWeaponGroup.variants;
 
-// Verify against real variants
-const match = currentWeaponGroup.variants.find(v => String(v.id) === candidateId);
-
-// If duration selected, also verify duration matches
-if (match && selectedDur && match.duration && match.duration.trim() !== selectedDur) {
-resultEl.textContent = '⚠ No match found';
-resultEl.style.color = '#ff8c42';
-copyBtn.disabled = true;
-return;
+// Filter by duration if selected
+if (selectedDur) {
+candidates = candidates.filter(v => (v.duration || 'Permanent').trim() === selectedDur);
 }
+
+// Filter by tens digit (upgrade type)
+candidates = candidates.filter(v => {
+const idStr = String(v.id);
+return idStr.slice(-2, -1) === tensDigit;
+});
+
+// Filter by ones digit (level)
+candidates = candidates.filter(v => {
+const idStr = String(v.id);
+return idStr.slice(-1) === onesDigit;
+});
+
+// Use first match
+const match = candidates[0] || null;
 
 if (match) {
 resultEl.textContent = match.id;
