@@ -121,7 +121,7 @@ ICONS_DIR: 'assets/icons/',
 DATA_FILES: {
 items:   'data/iteminfo.cdb.json',
 weaponItems: 'data/itemweaponsinfo.cdb.json',
-weaponStats: 'data/weaponinfo_cdb.json',
+weaponStats: 'data/weaponinfo.cdb.json',
 icons:   'data/iconsinfo.cdb.json',
 banned:  'data/banned.json',
 changelog: 'data/changelog.json'
@@ -541,11 +541,50 @@ if (lower.includes('package')) return false;
 return true;
 });
 
-// Normalize "1 day" variations
+// Normalize duration variations
 durations = durations.map(d => {
-// Normalize variations of "1 day" to just "1 day"
-if (d === 'Duration: 1 day' || d === '1 day') return '1 day';
-return d;
+// Extract just the duration part, removing prefixes like "Duration:" or "Time:"
+let normalized = d.trim();
+
+// Case-insensitive removal of common prefixes
+const lowerNorm = normalized.toLowerCase();
+
+// Remove "duration:" prefix (case-insensitive)
+if (lowerNorm.startsWith('duration:')) {
+normalized = normalized.substring(9).trim();
+}
+// Remove "time:" prefix (case-insensitive)
+else if (lowerNorm.startsWith('time:')) {
+normalized = normalized.substring(5).trim();
+}
+
+// Normalize common duration formats
+// Handle variations like "1 day", "1day", "1 Day", etc.
+const dayVariations = [
+['1 day', '1 Day'],
+['7 days', '7 Days'],
+['14 days', '14 Days'],
+['30 days', '30 Days'],
+['90 days', '90 Days'],
+['365 days', '365 Days'],
+['unlimited', 'Unlimited'],
+['permanent', 'Permanent']
+];
+
+const lowerResult = normalized.toLowerCase();
+for (const [variant, standard] of dayVariations) {
+if (lowerResult === variant || lowerResult === variant.replace(' ', '')) {
+normalized = standard;
+break;
+}
+}
+
+// Capitalize first letter if not already handled
+if (normalized.length > 0 && normalized[0] !== normalized[0].toUpperCase()) {
+normalized = normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
+
+return normalized;
 });
 
 // Remove duplicates after normalization
@@ -629,6 +668,7 @@ id: item.id,
 duration: item.duration, 
 upgrade: item.upgrade, 
 name: item.name, 
+desc: item.desc,
 category: item.category, 
 effect: item.effect || 0, 
 nameOption: item.nameOption || '',
@@ -636,7 +676,12 @@ weaponStats: item.weaponStats
 });
 }
 for (const g of map.values()) {
-if (!g.name) { g.name = g.variants[0].name; g.desc = g.variants[0].desc || ''; }
+if (!g.name) { 
+g.name = g.variants[0].name; 
+// Try to find a variant with a description
+const variantWithDesc = g.variants.find(v => v.desc);
+g.desc = variantWithDesc ? variantWithDesc.desc : '';
+}
 g.variants.sort((a, b) => Number(a.id) - Number(b.id));
 }
 return [...map.values()];
@@ -1158,14 +1203,9 @@ const clothingData = group.variants[0];
 // Set name and description
 document.getElementById('clothing-modal-name').textContent = group.name;
 document.getElementById('clothing-modal-desc').textContent = group.desc || 'No description available.';
-// Set image
+// Set image using sprite system (same as weapon modal)
 const imgContainer = document.getElementById('clothing-modal-image');
-const iconPath = clothingData.ii_iconname ? 'icons/' + clothingData.ii_iconname + '.png' : null;
-if (iconPath && iconData[iconPath]) {
-imgContainer.innerHTML = '<img src="' + iconData[iconPath] + '" style="max-width:150px;max-height:150px;object-fit:contain;image-rendering:pixelated">';
-} else {
-imgContainer.innerHTML = '<div style="width:150px;height:150px;background:var(--bg3);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text3)">No Icon</div>';
-}
+imgContainer.innerHTML = iconHtml(group, 'card');
 // Populate duration dropdown
 const durationSelect = document.getElementById('clothing-duration');
 const durations = [...new Set(group.variants.map(v => v.duration).filter(Boolean))];
