@@ -75,6 +75,16 @@ to bottom,rgba(10,12,20,.55) 0%,rgba(10,12,20,.82) 80%,rgba(10,12,20,1) 100%
 <select id="filter-tag">
 <option value="">All Tags</option>
 </select>
+<select id="filter-clothing-part" style="display:none" onchange="setClothingPart(this.value)">
+<option value="All">All Slots</option>
+<option value="Hair">Hair</option>
+<option value="Face">Face</option>
+<option value="Top">Top</option>
+<option value="Skirt">Skirt</option>
+<option value="Legs">Legs</option>
+<option value="Shoes">Shoes</option>
+<option value="Hands">Hands</option>
+</select>
 <select id="sort-by">
 <option value="name-asc">Name (A–Z)</option>
 <option value="name-desc">Name (Z–A)</option>
@@ -202,6 +212,22 @@ weapons: ['Melee','Rifle','Shotgun','Sniper','MicroGun','Bazooka','Grenade Launc
 accessories: ['Head Accessory','Back Accessory','Waist Accessory'],
 other: ['Other Items','Banned Items']
 };
+// Clothing slot detection: [label, ii_type, ii_type_inven]
+const CLOTHING_PARTS = [
+['Hair',  0, 11],
+['Face',  1, 12],
+['Top',   2, 13],
+['Skirt', 4, 14],
+['Legs',  3, 15],
+['Shoes', 6, 17],
+['Hands', 5, 16],
+];
+function getClothingPart(ii_type, ii_type_inven) {
+for (const [label, t, ti] of CLOTHING_PARTS) {
+if (ii_type === t || ii_type_inven === ti) return label;
+}
+return null;
+}
 let allItems = [];
 let iconData = {};
 let bannedIds = new Set();
@@ -210,6 +236,7 @@ let tagMap = new Map(); // itemId → [tagName, ...]
 let weaponStatsMap = new Map();
 let activeMainTab = 'characters';
 let activeCategory = 'All';
+let activeClothingPart = 'All';
 function setStep(id, state) {
 const el = document.getElementById(id);
 el.classList.remove('active','done');
@@ -466,7 +493,8 @@ effect: item.ef_effect_1 != null ? Number(item.ef_effect_1) : 0,
 nameOption: s(item.ii_name_option),
 sprite,
 classFlags,
-weaponStats: getWeaponStats(id, item, weaponStatsMap)
+weaponStats: getWeaponStats(id, item, weaponStatsMap),
+clothingPart: getClothingPart(item.ii_type ?? null, item.ii_type_inven ?? null)
 };
 });
 setStep('step-build','done'); setBar(100);
@@ -492,8 +520,8 @@ showLoadError(err.message);
 function determineCategory(filename, classFlags = {}, ii_type = null, ii_type_inven = null) {
 if (!filename || !filename.trim()) return { category: 'Other Items', characters: [] };
 
-// Force items/boxes (ii_type === 24 or ii_type_inven === 27) to Other Items
-if (ii_type === 24 || ii_type_inven === 27) return { category: 'Other Items', characters: [] };
+// Force items/boxes (ii_type === 24/25 or ii_type_inven === 24/25/27) to Other Items
+if (ii_type === 24 || ii_type === 25 || ii_type_inven === 24 || ii_type_inven === 25 || ii_type_inven === 27) return { category: 'Other Items', characters: [] };
 
 const lower = filename.toLowerCase().trim().replace(/\\/g, '/');
 const segments = lower.split('/');
@@ -609,9 +637,20 @@ if (current) sel.value = current;
 function setMainTab(tab) {
 activeMainTab = tab;
 activeCategory = 'All';
+activeClothingPart = 'All';
+// Show clothing part dropdown only on characters tab
+const partFilter = document.getElementById('filter-clothing-part');
+if (partFilter) {
+partFilter.style.display = (tab === 'characters') ? '' : 'none';
+partFilter.value = 'All';
+}
 document.querySelectorAll('.main-tab').forEach(b =>
 b.classList.toggle('active', b.id === 'tab-' + tab));
 buildCategoryStrip();
+render();
+}
+function setClothingPart(part) {
+activeClothingPart = part;
 render();
 }
 function buildCategoryStrip() {
@@ -757,6 +796,10 @@ i.category === activeCategory ||
 (i.characters && i.characters.includes(activeCategory))
 );
 }
+// Clothing slot filter (characters tab only)
+if (activeMainTab === 'characters' && activeClothingPart !== 'All') {
+items = items.filter(i => i.clothingPart === activeClothingPart);
+}
 if (q) items = items.filter(i =>
 i.name.toLowerCase().includes(q) ||
 String(i.id).includes(q) ||
@@ -783,6 +826,9 @@ document.getElementById('filter-tag').value = '';
 document.getElementById('sort-by').value = 'name-asc';
 activeMainTab = 'characters';
 activeCategory = 'All';
+activeClothingPart = 'All';
+const partFilter = document.getElementById('filter-clothing-part');
+if (partFilter) { partFilter.style.display = ''; partFilter.value = 'All'; }
 document.querySelectorAll('.main-tab').forEach(b =>
 b.classList.toggle('active', b.id === 'tab-characters'));
 buildCategoryStrip();
