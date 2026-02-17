@@ -507,6 +507,8 @@ document.getElementById('stat-icons-wrap').style.display = '';
 }
 buildCategoryStrip();
 buildTagDropdown();
+// Build full unfiltered family groups for name-based searches
+allFamilyGroups = groupByFamilyRoot(allItems);
 resetFilters();
 setTimeout(() => {
 ls.classList.add('fade-out');
@@ -697,6 +699,7 @@ b.classList.toggle('active', b.dataset.cat === cat));
 render();
 }
 let familyGroups = [];
+let allFamilyGroups = []; // Full unfiltered groups for name-based searches
 function groupByFamilyRoot(items) {
 const map = new Map();
 for (const item of items) {
@@ -1060,7 +1063,7 @@ const hasUnlimitedInGroup = variantsToCheck.some(v => String(v.id).slice(-2, -1)
 
 // If no unlimited variants in this group, search other groups with the same name
 if (!hasUnlimitedInGroup && group.name) {
-const matchingGroup = familyGroups.find(g => 
+const matchingGroup = allFamilyGroups.find(g => 
 g.name === group.name && 
 g.rootKey !== group.rootKey &&
 g.variants.some(v => String(v.id).slice(-2, -1) === '5')
