@@ -1,7 +1,29 @@
 {
-  "currentVersion": "2.1.0",
+  "currentVersion": "2.1.5",
   "lastUpdated": "2026-02-16",
   "entries": [
+    {
+      "version": "2.1.5",
+      "date": "February 16, 2026",
+      "changes": [
+        {
+          "type": "added",
+          "text": "Accessories Category has been added."
+        },
+        {
+          "type": "added",
+          "text": "New Colors for each weapon type."
+        },
+        {
+          "type": "improved",
+          "text": "Website Optimization for faster load times and smoother performance."
+        },
+        {
+          "type": "added",
+          "text": "New Upgrade UI to Accessories and Clothes."
+        }
+      ]
+    },
     {
       "version": "2.1.0",
       "date": "February 16, 2026",
