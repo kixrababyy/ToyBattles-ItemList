@@ -808,7 +808,17 @@ i.file.toLowerCase().includes(q)
 );
 if (tag) {
 const tagObj = tagData.find(t => t.name === tag);
-if (tagObj) items = items.filter(i => tagObj.ids.has(String(i.id)));
+if (tagObj) {
+// Find all root keys where at least one variant matches the tag
+const matchingRoots = new Set();
+items.forEach(i => {
+if (tagObj.ids.has(String(i.id))) {
+matchingRoots.add(i.rootKey);
+}
+});
+// Include ALL items from matching root families
+items = items.filter(i => matchingRoots.has(i.rootKey));
+}
 }
 return [...items].sort((a, b) => {
 switch(srt) {
