@@ -173,6 +173,9 @@ const AMMO_EFFECTS = new Map([
 [40609, 'Grenade Launcher']
 ]);
 
+// Weapon categories
+const WEAPON_CATS = new Set(['Melee','Rifle','Shotgun','Sniper','MicroGun','Bazooka','Grenade Launcher']);
+
 const TAB_GROUPS = {
 characters: ['Pandora','Naomi','Kai','CHIP','Knox','Simon','Sophita','Amelia','Sharkill'],
 weapons: ['Melee','Rifle','Shotgun','Sniper','MicroGun','Bazooka','Grenade Launcher'],
@@ -712,7 +715,57 @@ g.desc = variantWithDesc ? variantWithDesc.desc : '';
 }
 g.variants.sort((a, b) => Number(a.id) - Number(b.id));
 }
-return [...map.values()];
+
+// Deduplicate weapons with same name - keep the one with upgrades
+const groups = [...map.values()];
+
+// Helper function to check if a group has upgradable variants
+function hasUpgrades(group) {
+return group.variants.some(v => {
+const upgrade = v.upgrade || '';
+// Check if it's upgradable (50-59 range) or unlimited
+return upgrade.includes('Upgradable') || upgrade.includes('Unlimited');
+});
+}
+
+// Group by name to find duplicates
+const nameMap = new Map();
+for (const group of groups) {
+// Only deduplicate weapons
+if (!WEAPON_CATS.has(group.category)) {
+nameMap.set(group.rootKey, group); // Non-weapons: use rootKey as unique identifier
+continue;
+}
+
+const name = group.name.toLowerCase().trim();
+if (!nameMap.has(name)) {
+nameMap.set(name, group);
+} else {
+// Duplicate found - compare upgrade availability
+const existing = nameMap.get(name);
+const existingHasUpgrades = hasUpgrades(existing);
+const currentHasUpgrades = hasUpgrades(group);
+
+// Keep the one with upgrades
+if (currentHasUpgrades && !existingHasUpgrades) {
+// Current has upgrades, existing doesn't - replace
+console.log(`Deduplicating "${group.name}": keeping ${group.rootKey} (has upgrades), removing ${existing.rootKey} (no upgrades)`);
+nameMap.set(name, group);
+} else if (!currentHasUpgrades && existingHasUpgrades) {
+// Existing has upgrades, current doesn't - keep existing
+console.log(`Deduplicating "${group.name}": keeping ${existing.rootKey} (has upgrades), removing ${group.rootKey} (no upgrades)`);
+// Do nothing, keep existing
+} else {
+// Both have upgrades or both don't - keep the one with lower rootKey (original)
+if (group.rootKey < existing.rootKey) {
+console.log(`Deduplicating "${group.name}": keeping ${group.rootKey} (lower ID), removing ${existing.rootKey}`);
+nameMap.set(name, group);
+}
+}
+}
+}
+
+return [...nameMap.values()];
 }
 function getFiltered() {
 const q = document.getElementById('search').value.toLowerCase().trim();
@@ -835,7 +888,6 @@ if (idx < groups.length) requestAnimationFrame(paint);
 }
 paint();
 }
-const WEAPON_CATS = new Set(['Melee','Rifle','Shotgun','Sniper','MicroGun','Bazooka','Grenade Launcher']);
 const WEAPON_STAT_LABELS = {
 'Melee': {a: 'Power', b: 'Range', c: 'Run Speed', d: 'Secondary Power'},
 'Rifle': {a: 'Power', b: 'Firing Rate', c: 'Accuracy', d: 'Reload Speed'},
