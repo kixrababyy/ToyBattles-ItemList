@@ -1263,69 +1263,58 @@ const group = familyGroups[gid];
 if (!group) return;
 currentClothingGroup = group;
 const modal = document.getElementById('clothing-modal');
-const clothingData = group.variants[0];
 // Set name and description
 document.getElementById('clothing-modal-name').textContent = group.name;
 document.getElementById('clothing-modal-desc').textContent = group.desc || 'No description available.';
-// Set image using sprite system (same as weapon modal)
-const imgContainer = document.getElementById('clothing-modal-image');
-imgContainer.innerHTML = iconHtml(group, 'card');
-// Populate duration dropdown
+// Set image
+document.getElementById('clothing-modal-image').innerHTML = iconHtml(group, 'card');
+
+// --- Duration dropdown ---
+// Collect all unique durations across every variant
+const durationSet = new Set();
+group.variants.forEach(v => {
+if (v.duration && !v.duration.includes('?') && !v.duration.toLowerCase().includes('package')) {
+durationSet.add(v.duration.trim());
+}
+});
 const durationSelect = document.getElementById('clothing-duration');
-const durations = [...new Set(group.variants.map(v => v.duration).filter(Boolean))];
 durationSelect.innerHTML = '<option value="">Select Duration</option>' +
-durations.map(d => '<option value="' + esc(d) + '">' + esc(d) + '</option>').join('');
+[...durationSet].sort().map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('');
 
-// Populate upgrade type dropdown
+// --- Stat Type dropdown ---
+// Build label → [tens digits] map so duplicate labels get merged into one option
+// e.g. both tens='5' and tens='6' might both be "Run Speed" → one "Run Speed" entry
 const typeSelect = document.getElementById('clothing-upgrade-type');
-typeSelect.innerHTML = '<option value="">Select Type</option>';
+typeSelect.innerHTML = '<option value="">Select Stat Type</option>';
 
-// For weapons, use UPGRADE_CONFIG
 const upgradeConfig = UPGRADE_CONFIG[group.category];
 if (upgradeConfig) {
+// Weapons fallback (shouldn't normally reach this via clothing modal)
 Object.keys(upgradeConfig).forEach(key => {
-typeSelect.innerHTML += '<option value="' + key + '">' + upgradeConfig[key] + '</option>';
+typeSelect.innerHTML += `<option value="${esc(key)}">${esc(upgradeConfig[key])}</option>`;
 });
 } else {
-// For accessories/clothing: scan actual variants to find what "tens digits" exist
-// Root ID ends in 00; variants look like root + tensDigit + onesDigit
-// e.g. rootKey=6722100, variant 6722150 → tens='5', ones='0'
-const rootStr = String(group.rootKey);
-const baseId = rootStr.slice(0, -2); // everything except last 2 digits
-
-// Build a map of tensDigit → label, based on real variants
-const tensMap = new Map(); // tensDigit → display label
+// Clothing/Accessories: group variants by their stat label
+const labelToTens = new Map(); // label → Set of tens digits
 group.variants.forEach(v => {
 const idStr = String(v.id);
-if (idStr.length < 2) return;
 const tens = idStr.slice(-2, -1);
 const ones = idStr.slice(-1);
-if (tens === '0' && ones === '0') return; // skip the root itself
-if (tensMap.has(tens)) return; // already have a label for this digit
-
-// Determine label from stat type
-const statType = determineStatType(v.effect, v.nameOption);
-if (statType) {
-tensMap.set(tens, statType);
-} else {
-// Fallback: label by duration if available
-tensMap.set(tens, v.duration || ('Type ' + tens));
-}
+if (tens === '0' && ones === '0') return; // skip root
+const label = determineStatType(v.effect, v.nameOption) || null;
+if (!label) return; // skip "no stat" variants
+if (!labelToTens.has(label)) labelToTens.set(label, new Set());
+labelToTens.get(label).add(tens);
 });
 
-// Add each unique type as an option, value = the actual tens digit
-tensMap.forEach((label, tensDigit) => {
-typeSelect.innerHTML += '<option value="' + esc(tensDigit) + '">' + esc(label) + '</option>';
+// Each unique label becomes one option; store all matching tens digits as JSON
+labelToTens.forEach((tensSet, label) => {
+const tensArr = JSON.stringify([...tensSet]);
+typeSelect.innerHTML += `<option value="${esc(tensArr)}">${esc(label)}</option>`;
 });
 }
-// Reset selections — level dropdown will be populated when type is chosen
-const levelSelect = document.getElementById('clothing-upgrade-level');
-levelSelect.innerHTML = '<option value="">Select Level</option>';
-levelSelect.disabled = true;
-document.getElementById('clothing-upgrade-type').onchange = function() {
-updateClothingLevels();
-updateClothingID();
-};
+
+// Reset result
 document.getElementById('clothing-result-id').textContent = '-';
 document.getElementById('clothing-result-id').style.color = 'var(--accent2)';
 document.getElementById('clothing-copy-btn').disabled = true;
@@ -1340,104 +1329,43 @@ if (event.target === event.currentTarget) {
 closeClothingModal();
 }
 }
-function updateClothingLevels() {
-if (!currentClothingGroup) return;
-const typeSelect = document.getElementById('clothing-upgrade-type');
-const levelSelect = document.getElementById('clothing-upgrade-level');
-const tensDigit = typeSelect.value;
-
-if (!tensDigit) {
-levelSelect.innerHTML = '<option value="">Select Level</option>';
-levelSelect.disabled = true;
-return;
-}
-
-// Find all variants with this tens digit and collect their ones digits
-const rootStr = String(currentClothingGroup.rootKey);
-const baseId = rootStr.slice(0, -2);
-const onesDigits = [];
-currentClothingGroup.variants.forEach(v => {
-const idStr = String(v.id);
-const tens = idStr.slice(-2, -1);
-const ones = idStr.slice(-1);
-if (tens === tensDigit) {
-onesDigits.push(ones);
-}
-});
-
-onesDigits.sort((a, b) => Number(a) - Number(b));
-
-if (onesDigits.length === 0) {
-levelSelect.innerHTML = '<option value="">No levels found</option>';
-levelSelect.disabled = true;
-return;
-}
-
-const levelLabels = {
-'0': 'Level 0 (Base)', '1': 'Level 1', '2': 'Level 2',
-'3': 'Level 3', '4': 'Level 4', '5': 'Level 5',
-'6': 'Level 6', '7': 'Level 7', '8': 'Level 8', '9': 'Level 9'
-};
-levelSelect.innerHTML = '<option value="">Select Level</option>' +
-onesDigits.map(d => `<option value="${d}">${levelLabels[d] || 'Level ' + d}</option>`).join('');
-levelSelect.disabled = false;
-}
 function updateClothingID() {
 if (!currentClothingGroup) return;
-const durationSelect = document.getElementById('clothing-duration');
-const typeSelect = document.getElementById('clothing-upgrade-type');
-const levelSelect = document.getElementById('clothing-upgrade-level');
+const selectedDuration = document.getElementById('clothing-duration').value;
+const selectedType = document.getElementById('clothing-upgrade-type').value; // JSON array of tens digits or weapon key
 const resultEl = document.getElementById('clothing-result-id');
 const copyBtn = document.getElementById('clothing-copy-btn');
 
-const selectedDuration = durationSelect.value;
-const tensDigit = typeSelect.value;    // actual digit from variant ID (e.g. '5')
-const onesDigit = levelSelect.value;  // level digit (e.g. '0')
+// Parse the tens digits (clothing stores JSON array of matching digits)
+let tensDigits = null;
+try { tensDigits = JSON.parse(selectedType); } catch(e) { tensDigits = selectedType ? [selectedType] : null; }
 
-// Need at least one selection to calculate
-if (!selectedDuration && !tensDigit) {
+// Need at least one selection
+if (!selectedDuration && !tensDigits) {
 resultEl.textContent = '-';
+resultEl.style.color = 'var(--accent2)';
 copyBtn.disabled = true;
 return;
 }
 
-// Build the candidate ID from root + tensDigit + onesDigit
-const rootStr = String(currentClothingGroup.rootKey);
-const baseId = rootStr.slice(0, -2); // strip last 2 digits
-const candidateId = tensDigit
-? baseId + tensDigit + onesDigit
-: null;
-
-// Try to find a matching real variant
-let match = null;
-if (candidateId) {
-match = currentClothingGroup.variants.find(v => String(v.id) === candidateId);
-} else if (selectedDuration) {
-// No type selected — match on duration only
-match = currentClothingGroup.variants.find(v => v.duration === selectedDuration);
-}
-
-// Additional filter by duration if both are selected
-if (match && selectedDuration && match.duration !== selectedDuration) {
-// Try to find one that matches both
-const bothMatch = currentClothingGroup.variants.find(v =>
-String(v.id) === candidateId && v.duration === selectedDuration
-);
-if (bothMatch) match = bothMatch;
-}
+// Find matching variant: must match duration (if selected) AND tens digit (if selected)
+let match = currentClothingGroup.variants.find(v => {
+const idStr = String(v.id);
+const tens = idStr.slice(-2, -1);
+const ones = idStr.slice(-1);
+if (tens === '0' && ones === '0') return false; // skip root
+const durationMatch = !selectedDuration || v.duration === selectedDuration;
+const typeMatch = !tensDigits || tensDigits.includes(tens);
+return durationMatch && typeMatch;
+});
 
 if (match) {
 resultEl.textContent = match.id;
-resultEl.style.color = 'var(--accent2)'; // Gold — valid ID
-copyBtn.disabled = false;
-} else if (candidateId) {
-// ID doesn't exist in real data — show it but flag as unverified
-resultEl.textContent = candidateId + ' ⚠ Not found';
-resultEl.style.color = '#ff8c42'; // Orange — warning
-copyBtn.disabled = true;
-} else {
-resultEl.textContent = '-';
 resultEl.style.color = 'var(--accent2)';
+copyBtn.disabled = false;
+} else {
+resultEl.textContent = '⚠ No match found';
+resultEl.style.color = '#ff8c42';
 copyBtn.disabled = true;
 }
 }
@@ -1541,15 +1469,9 @@ loadAllData();</script>
 </select>
 </div>
 <div class="variant-selector-row">
-<label>Upgrade Type:</label>
+<label>Stat Type:</label>
 <select id="clothing-upgrade-type" onchange="updateClothingID()">
-<option value="">Select Type</option>
-</select>
-</div>
-<div class="variant-selector-row">
-<label>Upgrade Level:</label>
-<select id="clothing-upgrade-level" onchange="updateClothingID()" disabled>
-<option value="">Select Level</option>
+<option value="">Select Stat Type</option>
 </select>
 </div>
 <div class="variant-result">
