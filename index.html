@@ -1263,58 +1263,49 @@ const group = familyGroups[gid];
 if (!group) return;
 currentClothingGroup = group;
 const modal = document.getElementById('clothing-modal');
-// Set name and description
 document.getElementById('clothing-modal-name').textContent = group.name;
 document.getElementById('clothing-modal-desc').textContent = group.desc || 'No description available.';
-// Set image
 document.getElementById('clothing-modal-image').innerHTML = iconHtml(group, 'card');
 
-// --- Duration dropdown ---
-// Collect all unique durations across every variant
-const durationSet = new Set();
-group.variants.forEach(v => {
-if (v.duration && !v.duration.includes('?') && !v.duration.toLowerCase().includes('package')) {
-durationSet.add(v.duration.trim());
-}
-});
-const durationSelect = document.getElementById('clothing-duration');
-durationSelect.innerHTML = '<option value="">Select Duration</option>' +
-[...durationSet].sort().map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('');
+// ID structure: [base][tens = duration digit][ones = stat type digit]
+// e.g. 1322350 → base=13223, tens=5 (Unlimited), ones=0 (Run Speed)
+//      1322351 → base=13223, tens=5 (Unlimited), ones=1 (HP)
 
-// --- Stat Type dropdown ---
-// Build label → [tens digits] map so duplicate labels get merged into one option
-// e.g. both tens='5' and tens='6' might both be "Run Speed" → one "Run Speed" entry
-const typeSelect = document.getElementById('clothing-upgrade-type');
-typeSelect.innerHTML = '<option value="">Select Stat Type</option>';
+const durationMap = new Map(); // tens digit → duration label
+const statMap = new Map();     // ones digit → stat label
 
-const upgradeConfig = UPGRADE_CONFIG[group.category];
-if (upgradeConfig) {
-// Weapons fallback (shouldn't normally reach this via clothing modal)
-Object.keys(upgradeConfig).forEach(key => {
-typeSelect.innerHTML += `<option value="${esc(key)}">${esc(upgradeConfig[key])}</option>`;
-});
-} else {
-// Clothing/Accessories: group variants by their stat label
-const labelToTens = new Map(); // label → Set of tens digits
 group.variants.forEach(v => {
 const idStr = String(v.id);
+if (idStr.length < 2) return;
 const tens = idStr.slice(-2, -1);
 const ones = idStr.slice(-1);
 if (tens === '0' && ones === '0') return; // skip root
-const label = determineStatType(v.effect, v.nameOption) || null;
-if (!label) return; // skip "no stat" variants
-if (!labelToTens.has(label)) labelToTens.set(label, new Set());
-labelToTens.get(label).add(tens);
-});
 
-// Each unique label becomes one option; store all matching tens digits as JSON
-labelToTens.forEach((tensSet, label) => {
-const tensArr = JSON.stringify([...tensSet]);
-typeSelect.innerHTML += `<option value="${esc(tensArr)}">${esc(label)}</option>`;
-});
+// tens → duration
+if (!durationMap.has(tens) && v.duration && !v.duration.includes('?')) {
+durationMap.set(tens, v.duration.trim());
 }
 
-// Reset result
+// ones → stat type
+if (!statMap.has(ones)) {
+const label = determineStatType(v.effect, v.nameOption);
+if (label) statMap.set(ones, label);
+}
+});
+
+const sortedDur = [...durationMap.entries()].sort((a, b) => Number(a[0]) - Number(b[0]));
+const sortedStat = [...statMap.entries()].sort((a, b) => Number(a[0]) - Number(b[0]));
+
+// Duration dropdown: value = tens digit
+const durationSelect = document.getElementById('clothing-duration');
+durationSelect.innerHTML = '<option value="">Select Duration</option>' +
+sortedDur.map(([d, label]) => `<option value="${d}">${esc(label)}</option>`).join('');
+
+// Stat type dropdown: value = ones digit
+const typeSelect = document.getElementById('clothing-upgrade-type');
+typeSelect.innerHTML = '<option value="">Select Stat Type</option>' +
+sortedStat.map(([d, label]) => `<option value="${d}">${esc(label)}</option>`).join('');
+
 document.getElementById('clothing-result-id').textContent = '-';
 document.getElementById('clothing-result-id').style.color = 'var(--accent2)';
 document.getElementById('clothing-copy-btn').disabled = true;
@@ -1331,34 +1322,24 @@ closeClothingModal();
 }
 function updateClothingID() {
 if (!currentClothingGroup) return;
-const selectedDuration = document.getElementById('clothing-duration').value;
-const selectedType = document.getElementById('clothing-upgrade-type').value; // JSON array of tens digits or weapon key
+const tensDigit = document.getElementById('clothing-duration').value;     // duration digit
+const onesDigit = document.getElementById('clothing-upgrade-type').value; // stat digit
 const resultEl = document.getElementById('clothing-result-id');
 const copyBtn = document.getElementById('clothing-copy-btn');
 
-// Parse the tens digits (clothing stores JSON array of matching digits)
-let tensDigits = null;
-try { tensDigits = JSON.parse(selectedType); } catch(e) { tensDigits = selectedType ? [selectedType] : null; }
-
-// Need at least one selection
-if (!selectedDuration && !tensDigits) {
+if (!tensDigit || !onesDigit) {
 resultEl.textContent = '-';
 resultEl.style.color = 'var(--accent2)';
 copyBtn.disabled = true;
 return;
 }
 
-// Find matching variant: must match duration (if selected) AND tens digit (if selected)
-let match = currentClothingGroup.variants.find(v => {
-const idStr = String(v.id);
-const tens = idStr.slice(-2, -1);
-const ones = idStr.slice(-1);
-if (tens === '0' && ones === '0') return false; // skip root
-const durationMatch = !selectedDuration || v.duration === selectedDuration;
-const typeMatch = !tensDigits || tensDigits.includes(tens);
-return durationMatch && typeMatch;
-});
+// ID = base (rootKey without last 2 digits) + tens (duration) + ones (stat)
+const rootStr = String(currentClothingGroup.rootKey);
+const baseId = rootStr.slice(0, -2);
+const candidateId = baseId + tensDigit + onesDigit;
 
+const match = currentClothingGroup.variants.find(v => String(v.id) === candidateId);
 if (match) {
 resultEl.textContent = match.id;
 resultEl.style.color = 'var(--accent2)';
