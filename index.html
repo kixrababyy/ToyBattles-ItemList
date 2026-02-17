@@ -160,6 +160,19 @@ const UPGRADE_CONFIG = {
 'Bazooka': {'5':'Firing Rate', '6':'Power', '7':'Projectile Speed'},
 'Grenade Launcher': {'5':'Blast Radius','6':'Power', '7':'Firing Rate'}
 };
+
+// Accessory stat classification (based on ef_effect_1)
+const SPEED_EFFECTS = new Set([20305, 20505, 20720, 20920, 21310, 21110]);
+const HP_EFFECTS = new Set([32140, 32340, 32616, 32816, 33180, 32980]);
+const AMMO_EFFECTS = new Map([
+[40306, 'Sniper'],
+[40209, 'Shotgun'],
+[40509, 'Bazooka'],
+[40406, 'MicroGun'],
+[40106, 'Rifle'],
+[40609, 'Grenade Launcher']
+]);
+
 const TAB_GROUPS = {
 characters: ['Pandora','Naomi','Kai','CHIP','Knox','Simon','Sophita','Amelia','Sharkill'],
 weapons: ['Melee','Rifle','Shotgun','Sniper','MicroGun','Bazooka','Grenade Launcher'],
@@ -246,7 +259,7 @@ bulletTotal: weapon.wi_bullet_total || 0
 }
 console.log('Weapon stats loaded:', weaponStatsMap.size);
 } catch(e) {
-console.warn('weaponinfo_cdb.json not loaded:', e.message);
+console.warn('weaponinfo.cdb.json not loaded:', e.message);
 }
 setStep('step-weapons','done'); setBar(72);
 let iconsRaw = [];
@@ -547,31 +560,46 @@ durations = durations.map(d => {
 let normalized = d.trim();
 
 // Case-insensitive removal of common prefixes
+// Handle variations like "Duration:", "Duration :", "duration : ", etc.
 const lowerNorm = normalized.toLowerCase();
 
-// Remove "duration:" prefix (case-insensitive)
-if (lowerNorm.startsWith('duration:')) {
-normalized = normalized.substring(9).trim();
+// Remove "duration" prefix (with optional spaces and colon)
+if (lowerNorm.startsWith('duration')) {
+// Find where "duration" ends and extract everything after it
+normalized = normalized.replace(/^duration\s*:\s*/i, '').trim();
 }
-// Remove "time:" prefix (case-insensitive)
-else if (lowerNorm.startsWith('time:')) {
-normalized = normalized.substring(5).trim();
+// Remove "time" prefix (with optional spaces and colon)
+else if (lowerNorm.startsWith('time')) {
+normalized = normalized.replace(/^time\s*:\s*/i, '').trim();
 }
 
 // Normalize common duration formats
-// Handle variations like "1 day", "1day", "1 Day", etc.
+// Handle variations like "1 day", "1day", "1 Day", "1 days", etc.
 const dayVariations = [
 ['1 day', '1 Day'],
+['1 days', '1 Day'],
+['2 hour', '2 Hours'],
+['2 hours', '2 Hours'],
+['3 hour', '3 Hours'],
+['3 hours', '3 Hours'],
+['3 day', '3 Days'],
+['3 days', '3 Days'],
+['7 day', '7 Days'],
 ['7 days', '7 Days'],
+['14 day', '14 Days'],
 ['14 days', '14 Days'],
+['30 day', '30 Days'],
 ['30 days', '30 Days'],
+['90 day', '90 Days'],
 ['90 days', '90 Days'],
+['365 day', '365 Days'],
 ['365 days', '365 Days'],
+['1 hour', '1 Hour'],
 ['unlimited', 'Unlimited'],
 ['permanent', 'Permanent']
 ];
 
-const lowerResult = normalized.toLowerCase();
+const lowerResult = normalized.toLowerCase().trim();
 for (const [variant, standard] of dayVariations) {
 if (lowerResult === variant || lowerResult === variant.replace(' ', '')) {
 normalized = standard;
@@ -823,12 +851,6 @@ const CHAR_UPGRADE_MAP = {
 '2': 'Unlimited - Run Speed',
 '3': 'Unlimited - Health'
 };
-const SPEED_EFFECTS = new Set([20305, 20505, 20720, 20920, 21310, 21110]);
-const HP_EFFECTS = new Set([32140, 32340, 32616, 32816, 33180, 32980]);
-const AMMO_EFFECTS = new Map([
-[40306, 'Sniper'], [40209, 'Shotgun'], [40509, 'Bazooka'],
-[40406, 'MicroGun'], [40106, 'Rifle'], [40609, 'Grenade Launcher']
-]);
 function statTypeOf(effect, nameOption) {
 if (SPEED_EFFECTS.has(effect)) return 'speed';
 if (HP_EFFECTS.has(effect)) return 'hp';
@@ -1194,6 +1216,37 @@ closeChangelog();
 }
 }
 let currentClothingGroup = null;
+function determineStatType(effect, nameOption) {
+// RULE #1: Check ef_effect_1 first (authoritative)
+if (SPEED_EFFECTS.has(effect)) {
+return 'Run Speed';
+}
+if (HP_EFFECTS.has(effect)) {
+return 'HP';
+}
+const ammoWeapon = AMMO_EFFECTS.get(effect);
+if (ammoWeapon) {
+return `${ammoWeapon} Ammo`;
+}
+
+// RULE #2: Fallback to text parsing if effect is 0 or unknown
+if (effect === 0 || !effect) {
+// Check for "No Option" case
+if (nameOption && nameOption.trim() === 'No Option') {
+return null; // No stat
+}
+// Parse the text
+if (nameOption) {
+const normalized = nameOption.toLowerCase().replace(/\s/g, '');
+if (normalized.includes('runspeed')) return 'Run Speed';
+if (normalized.includes('hp')) return 'HP';
+}
+}
+
+// RULE #3: Unknown
+return null;
+}
+
 function openClothingModal(gid) {
 const group = familyGroups[gid];
 if (!group) return;
@@ -1211,14 +1264,36 @@ const durationSelect = document.getElementById('clothing-duration');
 const durations = [...new Set(group.variants.map(v => v.duration).filter(Boolean))];
 durationSelect.innerHTML = '<option value="">Select Duration</option>' +
 durations.map(d => '<option value="' + esc(d) + '">' + esc(d) + '</option>').join('');
+
 // Populate upgrade type dropdown
-const upgradeConfig = UPGRADE_CONFIG[group.category];
 const typeSelect = document.getElementById('clothing-upgrade-type');
 typeSelect.innerHTML = '<option value="">Select Type</option>';
+
+// For weapons, use UPGRADE_CONFIG
+const upgradeConfig = UPGRADE_CONFIG[group.category];
 if (upgradeConfig) {
 Object.keys(upgradeConfig).forEach(key => {
 typeSelect.innerHTML += '<option value="' + key + '">' + upgradeConfig[key] + '</option>';
 });
+} else {
+// For accessories/clothing, detect stat types from variants
+const statTypes = new Set();
+group.variants.forEach(v => {
+const statType = determineStatType(v.effect, v.nameOption);
+if (statType) {
+statTypes.add(statType);
+}
+});
+
+// Add stat types as upgrade options
+if (statTypes.size > 0) {
+let typeIndex = 0;
+statTypes.forEach(statType => {
+// Use a simple index as the value
+typeSelect.innerHTML += '<option value="stat' + typeIndex + '">' + esc(statType) + '</option>';
+typeIndex++;
+});
+}
 }
 // Reset selections
 document.getElementById('clothing-upgrade-level').value = '0';
