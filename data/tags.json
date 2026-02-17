@@ -1,12 +1,12 @@
 [
   {
     "name": "💎 Exclusive",
-    "color": "##5ca3ff",
+    "color": "#5ca3ff",
     "ids": [1840900]
   },
   {
     "name": "✨ New",
-    "color": "##fff533",
+    "color": "#fff533",
     "ids": [7018800]
   }
 ]
