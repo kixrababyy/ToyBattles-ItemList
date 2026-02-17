@@ -494,7 +494,8 @@ nameOption: s(item.ii_name_option),
 sprite,
 classFlags,
 weaponStats: getWeaponStats(id, item, weaponStatsMap),
-clothingPart: getClothingPart(item.ii_type ?? null, item.ii_type_inven ?? null)
+clothingPart: getClothingPart(item.ii_type ?? null, item.ii_type_inven ?? null),
+meshFile: s(item.ii_meshfilename).toLowerCase().trim()
 };
 });
 setStep('step-build','done'); setBar(100);
@@ -812,23 +813,15 @@ i.file.toLowerCase().includes(q)
 if (tag) {
 const tagObj = tagData.find(t => t.name === tag);
 if (tagObj) {
-// Build a map of rootKey → all item IDs in that family (from current filtered items)
-const rootToIds = new Map();
+// Find all mesh files from items whose IDs are in the tag
+const matchingMeshes = new Set();
 items.forEach(i => {
-if (!rootToIds.has(i.rootKey)) rootToIds.set(i.rootKey, []);
-rootToIds.get(i.rootKey).push(String(i.id));
+if (tagObj.ids.has(String(i.id)) && i.meshFile) {
+matchingMeshes.add(i.meshFile);
+}
 });
-
-// Find root families where at least one tagged ID actually exists in that family
-const matchingRoots = new Set();
-for (const [rootKey, ids] of rootToIds) {
-if (ids.some(id => tagObj.ids.has(id))) {
-matchingRoots.add(rootKey);
-}
-}
-
-// Include ALL items from matching root families
-items = items.filter(i => matchingRoots.has(i.rootKey));
+// Include ALL items that share those mesh files
+items = items.filter(i => i.meshFile && matchingMeshes.has(i.meshFile));
 }
 }
 return [...items].sort((a, b) => {
