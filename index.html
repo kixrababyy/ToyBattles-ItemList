@@ -425,6 +425,35 @@ function getWeaponStatsComprehensive(id, statsMap) {
 // Comprehensive lookup used ONLY in modal (includes expensive operations)
 if (!statsMap || statsMap.size === 0) return null;
 
+// Add explicit mapping for custom event items (mimics)
+const WEAPON_MIMIC_MAP = {
+// Forks
+'70218': '3014510',
+'70219': '3014510',
+'70220': '3014510',
+'70221': '3014510',
+// Cannons (Mimics 30601 Bazooka)
+'39124': '3060100',
+'39125': '3060100',
+'39126': '3060100',
+// Rifles (Mimics 30215)
+'39121': '3021500',
+'39122': '3021500',
+'39123': '3021500',
+// Melee (Mimics 30101)
+'70216': '3010100',
+'70217': '3010100'
+};
+
+const shortPrefix = id.slice(0, 5);
+if (WEAPON_MIMIC_MAP[shortPrefix]) {
+    let stats = statsMap.get(WEAPON_MIMIC_MAP[shortPrefix]);
+    if (stats) {
+        console.log('Modal: Using explicit mapped stats from ' + WEAPON_MIMIC_MAP[shortPrefix] + ' for ' + id);
+        return stats;
+    }
+}
+
 // Try exact ID match
 let stats = statsMap.get(id);
 if (stats) return stats;
